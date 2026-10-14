@@ -1,0 +1,26 @@
+{
+  "invalidLocators": [
+    "",
+    "   ",
+    "noseparator",
+    "unknown=abc",
+    "id="
+  ],
+  "validLocators": {
+    "id=com.example:id/title": "id",
+    "accessibilityId=Login": "accessibilityId",
+    "xpath=//android.widget.TextView": "xpath",
+    "text=Welcome": "text"
+  },
+  "credentials": {
+    "username": "${env:TEST_USERNAME}",
+    "password": "${env:TEST_PASSWORD}"
+  },
+  "invalidLogin": {
+    "username": "9000000000",
+    "password": "Wrong@Pass123"
+  },
+  "boundary": {
+    "elevenDigitMobile": "09123456789"
+  }
+}

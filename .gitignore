@@ -1,0 +1,7 @@
+target/
+.idea/
+*.iml
+.env
+*.apk
+*.keystore
+test-output/

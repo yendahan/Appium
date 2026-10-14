@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level [%t] %c{1} - %msg%n"/>
+        </Console>
+        <File name="File" fileName="target/logs/test-run.log" append="false">
+            <PatternLayout pattern="%d{ISO8601} %-5level [%t] %c - %msg%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.openqa.selenium" level="warn"/>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>
