@@ -9,6 +9,7 @@ import java.util.Map;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertThrows;
+import static org.testng.Assert.expectThrows;
 
 @Test(groups = "unit")
 public class TestDataLoaderTest {
@@ -21,13 +22,8 @@ public class TestDataLoaderTest {
     }
 
     public void missingEnvVarFailsWithVariableName() {
-        FrameworkException e = null;
-        try {
-            new TestDataLoader("qa").node("credentials", k -> null);
-        } catch (FrameworkException ex) {
-            e = ex;
-        }
-        assertEquals(e == null, false, "expected failure");
+        FrameworkException e = expectThrows(FrameworkException.class,
+                () -> new TestDataLoader("qa").node("credentials", k -> null));
         assertEquals(e.getMessage().contains("TEST_USERNAME"), true);
     }
 

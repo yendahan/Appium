@@ -17,12 +17,26 @@ import java.nio.file.Paths;
 import java.util.stream.Collectors;
 
 /**
- * On failure, saves a screenshot, the UI hierarchy (page source) and recent logcat output, and links them
+ * On success, saves a screenshot. On failure, saves a screenshot, the UI hierarchy (page source) and recent logcat output, and links them
  * from the TestNG HTML report. Diagnostics errors are logged and never mask the original failure.
  */
 public class TestListener implements ITestListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestListener.class);
+
+    @Override
+    public void onTestSuccess(ITestResult result) {
+        AndroidDriver driver = DriverManager.get();
+        if (driver == null) {
+            return;
+        }
+        String name = result.getTestClass().getRealClass().getSimpleName() + "." + result.getMethod().getMethodName();
+        attempt("screenshot", () -> {
+            Path shot = new MobileActions(driver).screenshot("PASSED", name);
+            Reporter.log("<br/><a href=\"" + shot.toAbsolutePath().toUri() + "\">Screenshot</a><br/>"
+                    + "<img src=\"" + shot.toAbsolutePath().toUri() + "\" height=\"300\"/>", true);
+        });
+    }
 
     @Override
     public void onTestFailure(ITestResult result) {
@@ -35,7 +49,7 @@ public class TestListener implements ITestListener {
         }
         MobileActions actions = new MobileActions(driver);
         attempt("screenshot", () -> {
-            Path shot = actions.screenshot(name);
+            Path shot = actions.screenshot("FAILED", name);
             Reporter.log("<br/><a href=\"" + shot.toAbsolutePath().toUri() + "\">Screenshot</a><br/>"
                     + "<img src=\"" + shot.toAbsolutePath().toUri() + "\" height=\"300\"/>", true);
         });

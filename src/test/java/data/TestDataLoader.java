@@ -9,7 +9,6 @@ import exceptions.FrameworkException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -54,8 +53,7 @@ public final class TestDataLoader {
         }
         if (node.isObject()) {
             ObjectNode obj = (ObjectNode) node;
-            for (Iterator<Map.Entry<String, JsonNode>> it = obj.fields(); it.hasNext(); ) {
-                Map.Entry<String, JsonNode> entry = it.next();
+            for (Map.Entry<String, JsonNode> entry : obj.properties()) {
                 entry.setValue(resolve(entry.getValue(), envLookup));
             }
         } else if (node.isArray()) {

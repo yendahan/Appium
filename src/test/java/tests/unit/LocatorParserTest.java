@@ -9,7 +9,6 @@ import org.testng.annotations.Test;
 import utils.LocatorParser;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +25,7 @@ public class LocatorParserTest {
     @DataProvider(name = "valid")
     public Object[][] valid() {
         List<Object[]> rows = new ArrayList<>();
-        for (Iterator<Map.Entry<String, JsonNode>> it = DATA.node("validLocators").fields(); it.hasNext(); ) {
-            Map.Entry<String, JsonNode> e = it.next();
+        for (Map.Entry<String, JsonNode> e : DATA.node("validLocators").properties()) {
             rows.add(new Object[]{e.getKey(), e.getValue().asText()});
         }
         return rows.toArray(new Object[0][]);

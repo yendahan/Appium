@@ -22,5 +22,20 @@
   },
   "boundary": {
     "elevenDigitMobile": "09123456789"
+  },
+  "sendMoney": {
+    "amount": "10",
+    "bayadWalletNumber": "9688528895",
+    "otherBank": {
+      "accountNumber": "111171201825",
+      "accountName": "Test Recipient",
+    "bankName": "Philippine National Bank"
+    },
+    "qr": {
+      "p2pStatic": "testdata/qr/qrp2p-static.png",
+      "p2pDynamic": "testdata/qr/qrp2p-dynamic.png",
+      "p2mStatic": "testdata/qr/qrp2m-static.png",
+      "p2mDynamic": "testdata/qr/qrp2m-dynamic.png"
+    }
   }
 }

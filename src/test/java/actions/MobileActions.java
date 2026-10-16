@@ -30,6 +30,9 @@ public class MobileActions {
 
     private static final Logger LOG = LoggerFactory.getLogger(MobileActions.class);
     private static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
+    /** One folder per test run (JVM), e.g. {@code screenshots/2026-10-16_14-30-00/PASSED}. */
+    private static final String RUN_FOLDER =
+            LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
 
     private final AndroidDriver driver;
     private final Duration defaultTimeout;
@@ -170,9 +173,17 @@ public class MobileActions {
 
     // ---- diagnostics -------------------------------------------------------------------------------------
 
-    /** Saves a PNG under {@code artifacts.dir/screenshots} and returns its path. */
+    /** Saves a PNG under {@code artifacts.dir/screenshots/<run date-time>} and returns its path. */
     public Path screenshot(String name) {
-        Path dir = Paths.get(ConfigManager.get().require("artifacts.dir"), "screenshots");
+        return screenshot(null, name);
+    }
+
+    /** Same as {@link #screenshot(String)} but saved under {@code screenshots/<run>/<subfolder>} (e.g. PASSED / FAILED). */
+    public Path screenshot(String subfolder, String name) {
+        Path dir = Paths.get(ConfigManager.get().require("artifacts.dir"), "screenshots", RUN_FOLDER);
+        if (subfolder != null && !subfolder.isBlank()) {
+            dir = dir.resolve(sanitize(subfolder));
+        }
         Path target = dir.resolve(sanitize(name) + "-" + LocalDateTime.now().format(STAMP) + ".png");
         try {
             Files.createDirectories(dir);
