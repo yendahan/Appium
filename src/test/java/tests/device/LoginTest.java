@@ -1,5 +1,6 @@
 package tests.device;
 
+import listeners.ZephyrCase;
 import base.BaseTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import data.TestDataLoader;
@@ -61,6 +62,7 @@ public class LoginTest extends BaseTest {
      */
     // Positive case.
     @Test(description = "Positive: valid credentials reach the home screen")
+    @ZephyrCase("AMW-T1134")
     public void validCredentialsReachHome() {
         // Read the credentials node (values resolved from TEST_USERNAME / TEST_PASSWORD).
         JsonNode creds = data.node("credentials");
@@ -82,6 +84,7 @@ public class LoginTest extends BaseTest {
      */
     // Negative case.
     @Test(description = "Negative: unknown account is rejected with an error and can be retried")
+    @ZephyrCase("AMW-T1135")
     public void unknownAccountIsRejected() {
         // Read the deliberately invalid account from test data.
         JsonNode bad = data.node("invalidLogin");
@@ -104,6 +107,7 @@ public class LoginTest extends BaseTest {
      */
     // Negative case.
     @Test(description = "Negative: valid username with a wrong password never reaches home")
+    @ZephyrCase("AMW-T1136")
     public void wrongPasswordIsRejected() {
         // Read the valid account (only the username is used).
         JsonNode creds = data.node("credentials");
@@ -123,6 +127,7 @@ public class LoginTest extends BaseTest {
      */
     // Edge case.
     @Test(description = "Edge: LOG IN stays disabled for an empty form and for a half-filled form")
+    @ZephyrCase("AMW-T1137")
     public void submitIsDisabledUntilBothFieldsAreFilled() {
         // Nothing entered yet, so submit must be disabled.
         assertFalse(loginPage.isSubmitEnabled(), "Empty form must not be submittable");
@@ -142,6 +147,7 @@ public class LoginTest extends BaseTest {
      */
     // Boundary case on the field's max length.
     @Test(description = "Boundary: the mobile field keeps at most 10 characters")
+    @ZephyrCase("AMW-T1138")
     public void mobileFieldIsLimitedToTenCharacters() {
         // Take the over-long (11 digit) value from test data.
         String elevenDigits = data.node("boundary").get("elevenDigitMobile").asText();

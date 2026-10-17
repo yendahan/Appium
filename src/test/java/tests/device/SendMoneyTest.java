@@ -1,5 +1,6 @@
 package tests.device;
 
+import listeners.ZephyrCase;
 import base.BaseTest;
 import com.fasterxml.jackson.databind.JsonNode;
 import data.TestDataLoader;
@@ -96,6 +97,7 @@ public class SendMoneyTest extends BaseTest {
      */
     // Positive case, driven by the qrCodes provider.
     @Test(dataProvider = "qrCodes", description = "Positive: Via QR accepts a valid QR code")
+    @ZephyrCase("AMW-T1139")
     public void viaQrValid(String type, String resource) {
         // Upload the QR image and enter the configured amount.
         sendMoney.viaQr(resourceFile(resource), DATA.node("sendMoney").get("amount").asText());
@@ -112,6 +114,7 @@ public class SendMoneyTest extends BaseTest {
      */
     // Positive case.
     @Test(description = "Positive: To Bayad Wallet accepts a valid registered number")
+    @ZephyrCase("AMW-T1140")
     public void toBayadWalletValid() {
         // Enter the wallet number and the configured amount.
         sendMoney.toBayadWallet(DATA.node("sendMoney").get("bayadWalletNumber").asText(),
@@ -130,6 +133,7 @@ public class SendMoneyTest extends BaseTest {
      */
     // Positive case.
     @Test(description = "Positive: To Other Banks and E-Wallets accepts a valid Philippine National Bank account")
+    @ZephyrCase("AMW-T1141")
     public void toOtherBankValid() {
         // Bank account details come from test data.
         JsonNode bank = DATA.node("sendMoney").get("otherBank");
