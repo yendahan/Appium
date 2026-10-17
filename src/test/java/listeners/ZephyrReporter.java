@@ -8,7 +8,6 @@ import org.testng.ITestListener;
 import org.testng.ITestResult;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
