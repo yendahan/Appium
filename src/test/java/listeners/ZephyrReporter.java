@@ -49,12 +49,12 @@ public class ZephyrReporter implements ITestListener {
         }
         // Comment keeps only the failure text; the screenshot goes into the step actual result.
         String comment = r.getThrowable() == null ? null : "Actual: " + r.getThrowable();
-        String actual = r.getThrowable() == null ? "As expected" : String.valueOf(r.getThrowable());
+        // Step fields are HTML, so the failure text is escaped.
+        String actual = r.getThrowable() == null ? "As expected" : escapeHtml(String.valueOf(r.getThrowable()));
         String screenshot = null;
         Object shot = r.getAttribute(TestListener.SCREENSHOT_ATTR);
         if (shot instanceof Path p) {
-            // Local path (e.g. inside a synced OneDrive folder); only openable on the machine that ran the tests.
-            screenshot = "Screenshot: " + p.toAbsolutePath();
+            screenshot = screenshotNote(p);
         }
         try {
             String execKey = EXECUTIONS.get(tc.value());
@@ -95,6 +95,35 @@ public class ZephyrReporter implements ITestListener {
         } catch (Exception e) {
             LOG.warn("Zephyr: could not pre-fill cycle {}: {}", cycleKey, e.toString());
         }
+    }
+
+    /**
+     * Short note for the step actual result: a link to the shared screenshot folder (zephyr.artifacts.link, or env
+     * ZEPHYR_ARTIFACTS_LINK) followed by the screenshot's path relative to the screenshots folder (run/PASSED|FAILED/file),
+     * so the personal local base path is not shown. Without a link configured only the relative part is shown.
+     */
+    private static String screenshotNote(Path png) {
+        ConfigManager cfg = ConfigManager.get();
+        String rel = png.getFileName().toString();
+        try {
+            Path base = java.nio.file.Paths.get(cfg.require("artifacts.dir"), "screenshots").toAbsolutePath().normalize();
+            Path abs = png.toAbsolutePath().normalize();
+            if (abs.startsWith(base)) {
+                rel = base.relativize(abs).toString();
+            }
+        } catch (RuntimeException e) {
+            LOG.warn("Zephyr: could not shorten screenshot path {}: {}", png, e.toString());
+        }
+        String link = cfg.has("zephyr.artifacts.link") ? cfg.get("zephyr.artifacts.link") : null;
+        if (link == null || link.isBlank()) {
+            return "Screenshot: " + escapeHtml(rel);
+        }
+        return "Screenshot: <a href=\"" + link.trim().replace("\"", "&quot;") + "\">OneDrive folder</a> &gt; " + escapeHtml(rel);
+    }
+
+    /** Escapes text for use inside an HTML step field. */
+    private static String escapeHtml(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     /** Lazily creates the client and this run's cycle once; returns false when Zephyr is not configured or setup failed. */
