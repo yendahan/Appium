@@ -24,6 +24,9 @@ public class TestListener implements ITestListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestListener.class);
 
+    /** ITestResult attribute holding the saved screenshot {@link Path}, read by {@link ZephyrReporter}. */
+    static final String SCREENSHOT_ATTR = "screenshotPath";
+
     /**
      * Captures a PASSED screenshot and links it from the TestNG report.
      * Side effects: writes a PNG under the artifacts directory and appends HTML to the report.
@@ -44,6 +47,8 @@ public class TestListener implements ITestListener {
         attempt("screenshot", () -> {
             // Save the screenshot into the PASSED subfolder of this run.
             Path shot = new MobileActions(driver).screenshot("PASSED", name);
+            // Let ZephyrReporter reference this screenshot.
+            result.setAttribute(SCREENSHOT_ATTR, shot);
             // Embed a link and thumbnail in the HTML report (true also echoes to the console log).
             Reporter.log("<br/><a href=\"" + shot.toAbsolutePath().toUri() + "\">Screenshot</a><br/>"
                     + "<img src=\"" + shot.toAbsolutePath().toUri() + "\" height=\"300\"/>", true);
@@ -77,6 +82,8 @@ public class TestListener implements ITestListener {
         attempt("screenshot", () -> {
             // Save the PNG for this failure.
             Path shot = actions.screenshot("FAILED", name);
+            // Let ZephyrReporter reference this screenshot.
+            result.setAttribute(SCREENSHOT_ATTR, shot);
             // Link and embed the image in the HTML report.
             Reporter.log("<br/><a href=\"" + shot.toAbsolutePath().toUri() + "\">Screenshot</a><br/>"
                     + "<img src=\"" + shot.toAbsolutePath().toUri() + "\" height=\"300\"/>", true);

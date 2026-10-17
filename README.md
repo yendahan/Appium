@@ -12,8 +12,9 @@ Java 17 · Maven · TestNG · Appium Java Client 11.0.0 · Selenium 4.51.0 · Pa
 | `driver/AppiumDriverFactory`, `DriverManager` | Builds `AndroidDriver` (UiAutomator2) from config; per-thread holder |
 | `actions/MobileActions`, `GestureValidator` | Explicit waits, tap, type, swipe, scroll-to-text, screenshots; validated arguments |
 | `pages/BasePage`, `LandingPage` | Page objects (locator for the landing screen comes from config) |
-| `base/BaseTest` | New session per test, always quit; attaches `TestListener` |
-| `listeners/TestListener` | On failure: screenshot, page source, logcat → `target/artifacts`, linked from the HTML report |
+| `base/BaseTest` | New session per test, always quit; attaches `TestListener` and `ZephyrReporter` |
+| `listeners/TestListener` | Screenshot on pass and fail; on failure also page source and logcat → `target/artifacts`, linked from the HTML report |
+| `listeners/ZephyrReporter`, `ZephyrCase`, `integrations/ZephyrClient` | Optional: publishes results of `@ZephyrCase`-annotated tests to a Zephyr Scale test cycle (see [Jira / Zephyr Scale](#jira--zephyr-scale-reporting-optional)) |
 | `data/TestDataLoader` | JSON test data; `${env:NAME}` resolved from environment variables (no secrets in repo) |
 | `tests/unit/*` | Device-free tests (config, locators, data, gesture validation) — group `unit` |
 | `tests/device/*` | Tests that need Appium + a device — group `device` |
@@ -68,3 +69,64 @@ Reports: `target/surefire-reports/index.html` (TestNG HTML; failure screenshots 
 
 Create a page object extending `BasePage`, put locators in the page class, delegate every interaction to
 `actions`, and extend `BaseTest` with `@Test(groups = "device")`. Never use `Thread.sleep`; use `MobileActions` waits.
+
+## Jira / Zephyr Scale reporting (optional)
+
+Results of tests annotated with `@ZephyrCase("<test case key>")` are published to a Zephyr Scale (Cloud, API v2) test
+cycle. View them in Jira under your project's **Zephyr Scale > Test Cycles**. Currently wired to project `AMW`
+(cases `AMW-T1130` to `AMW-T1141`, folder `Mobile Automation`).
+
+### Setup
+
+1. **Test cases**: create them in Zephyr (name, plus steps with expected results on the Test Script tab), then annotate
+   the matching test method: `@ZephyrCase("AMW-T1130")` (import `listeners.ZephyrCase`).
+2. **Project key**: `AMW` is only the default in `default.properties`. Override it on any run (highest priority first):
+   `-Dzephyr.project.key=<KEY>`, then env var `ZEPHYR_PROJECT_KEY`, then `env/<env>.properties`. For example
+   `export ZEPHYR_PROJECT_KEY=OTHER`. Optional `zephyr.base.url` (default `https://api.zephyrscale.smartbear.com/v2`).
+3. **Token**: create it in Zephyr Scale > profile > Access Tokens and export it. Never put it in a file:
+   `export ZEPHYR_TOKEN=<token>`.
+4. **Cycle** (optional): create a cycle in Zephyr Scale > Test Cycles and set its key (looks like `AMW-R204`, with the `R`):
+   `export ZEPHYR_CYCLE_KEY=AMW-R204` (or `zephyr.cycle.key`). Every run then reuses it. If unset, each run creates a
+   new cycle named `Automation <env>/<device> <date time>`. The key is not validated: a wrong or deleted key makes the
+   run pass but publish nothing (look for `Zephyr: cycle <key> lists N cases` in the log).
+5. **Screenshot folder** (optional): save screenshots into a synced OneDrive folder so the path in Zephyr points there:
+   `export ARTIFACTS_DIR="$HOME/Library/CloudStorage/OneDrive-<org>/CIS/Automation Screenshots/Bayad App"`.
+
+Without `ZEPHYR_TOKEN` and a project key the reporter does nothing. Jira errors are only logged and never change a
+test result.
+
+### What gets published
+
+- **All cases in every run**: at the start of a run every case in the Zephyr folder `Mobile Automation` (override with
+  `zephyr.cases.folder`) is put in the cycle as *Not Executed* (or reset to it when the cycle is reused). Each test that
+  runs updates its own row to Pass / Fail / Blocked, so tests you skip (e.g. Send Money) stay Not Executed.
+- **Expected results**: the case's steps are copied into the execution. The reporter sets every step to the test's
+  overall status with the actual result (`As expected`, or the exception message). It cannot tell which step failed.
+- **Screenshots**: not uploaded (the Zephyr Cloud API has no documented attachment upload for executions). The full
+  local path is added to the **Actual Result of the last step**. It only opens on the machine that ran the tests (or
+  via OneDrive sync); others can find the file by name. The execution comment holds only the failure text, if any.
+
+### Example full run
+
+```bash
+export TEST_USERNAME=<10-digit mobile> TEST_PASSWORD=<password>
+export ZEPHYR_TOKEN=<token> ZEPHYR_PROJECT_KEY=AMW ZEPHYR_CYCLE_KEY=AMW-R204
+export ZEPHYR_CASES_FOLDER="Mobile Automation"   # optional, this is the default
+export ARTIFACTS_DIR="$HOME/Library/CloudStorage/OneDrive-<org>/CIS/Automation Screenshots/Bayad App"
+mvn test -Dgroups=device -Denv=qa -Ddevice=emulator
+```
+
+Careful: `SendMoneyTest` moves real Php 10 on staging per test and `LoginTest` can lock the test account. For a safe check
+run one class, e.g. `-Dtest=AppLaunchTest`.
+
+### Using a different Zephyr project
+
+1. Set the project key for the run: `export ZEPHYR_PROJECT_KEY=<KEY>` (or `-Dzephyr.project.key=<KEY>`).
+2. Use a token that has access to that project, and a cycle key from it (`ZEPHYR_CYCLE_KEY`), or unset the cycle key to
+   create a new cycle for the run.
+3. Create the test cases there, in a folder named `Mobile Automation`, or set the folder name for the run:
+   `export ZEPHYR_CASES_FOLDER="My Folder"` (or `-Dzephyr.cases.folder="My Folder"`). It must match the Zephyr folder
+   exactly. The folder and cases must already exist: the run does not create them. If the name is wrong the run still
+   passes but the cycle lists no cases (log: `Zephyr: cycle <key> lists 0 cases`). This also applies to the first run.
+4. Update the `@ZephyrCase("AMW-T...")` keys in `tests/device/*`. They are fixed in the code and do not follow the
+   project key setting, so they must match the new project's case keys.

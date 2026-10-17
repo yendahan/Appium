@@ -1,5 +1,6 @@
 package tests.device;
 
+import listeners.ZephyrCase;
 import base.BaseTest;
 import org.testng.annotations.Test;
 import pages.LandingPage;
@@ -24,6 +25,7 @@ public class AppLaunchTest extends BaseTest {
      */
     // Positive case; description shows up in the TestNG report.
     @Test(description = "Positive: app launches and the configured landing element is visible")
+    @ZephyrCase("AMW-T1130")
     public void appLaunchesAndLandingElementIsVisible() {
         // Build the landing page object on the live driver.
         LandingPage landing = new LandingPage(driver());
@@ -38,6 +40,7 @@ public class AppLaunchTest extends BaseTest {
      */
     // Negative case: missing element is a normal false result.
     @Test(description = "Negative: a non-existent element is reported as not visible, not as an error")
+    @ZephyrCase("AMW-T1131")
     public void missingElementIsNotVisible() {
         // Build the landing page object on the live driver.
         LandingPage landing = new LandingPage(driver());
@@ -54,6 +57,7 @@ public class AppLaunchTest extends BaseTest {
      */
     // Boundary case on the smallest practical timeout.
     @Test(description = "Boundary: a 1s wait on a missing element returns promptly (no hang)")
+    @ZephyrCase("AMW-T1132")
     public void shortWaitTimesOutQuickly() {
         // Build the landing page object on the live driver.
         LandingPage landing = new LandingPage(driver());
@@ -77,6 +81,7 @@ public class AppLaunchTest extends BaseTest {
      */
     // Edge case: bounded scrolling must not loop forever.
     @Test(description = "Edge: scrolling to text that does not exist stops after the bound and returns false")
+    @ZephyrCase("AMW-T1133")
     public void scrollToMissingTextReturnsFalse() {
         // Build the landing page object on the live driver.
         LandingPage landing = new LandingPage(driver());
