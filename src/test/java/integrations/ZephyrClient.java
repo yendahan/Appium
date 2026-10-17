@@ -85,7 +85,7 @@ public class ZephyrClient {
             Map<String, Object> item = new LinkedHashMap<>();
             item.put("statusName", statusName);
             boolean last = i == steps.size() - 1;
-            item.put("actualResult", last && lastStepNote != null ? actual + "\n" + lastStepNote : actual);
+            item.put("actualResult", last && lastStepNote != null ? actual + "<br>" + lastStepNote : actual);
             items.add(item);
         }
         if (!items.isEmpty()) {

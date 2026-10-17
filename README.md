@@ -89,8 +89,10 @@ cycle. View them in Jira under your project's **Zephyr Scale > Test Cycles**. Cu
    `export ZEPHYR_CYCLE_KEY=AMW-R204` (or `zephyr.cycle.key`). Every run then reuses it. If unset, each run creates a
    new cycle named `Automation <env>/<device> <date time>`. The key is not validated: a wrong or deleted key makes the
    run pass but publish nothing (look for `Zephyr: cycle <key> lists N cases` in the log).
-5. **Screenshot folder** (optional): save screenshots into a synced OneDrive folder so the path in Zephyr points there:
-   `export ARTIFACTS_DIR="$HOME/Library/CloudStorage/OneDrive-<org>/CIS/Automation Screenshots/Bayad App"`.
+5. **Screenshot folder** (optional): save screenshots into a synced OneDrive folder and give Zephyr a link to it:
+   `export ARTIFACTS_DIR="$HOME/Library/CloudStorage/OneDrive-<org>/CIS/Automation Screenshots/Bayad App"` and
+   `export ZEPHYR_ARTIFACTS_LINK="<shared folder URL>"` (or `-Dzephyr.artifacts.link`). The URL is organisation-private:
+   set it per run, never commit it.
 
 Without `ZEPHYR_TOKEN` and a project key the reporter does nothing. Jira errors are only logged and never change a
 test result.
@@ -102,9 +104,12 @@ test result.
   runs updates its own row to Pass / Fail / Blocked, so tests you skip (e.g. Send Money) stay Not Executed.
 - **Expected results**: the case's steps are copied into the execution. The reporter sets every step to the test's
   overall status with the actual result (`As expected`, or the exception message). It cannot tell which step failed.
-- **Screenshots**: not uploaded (the Zephyr Cloud API has no documented attachment upload for executions). The full
-  local path is added to the **Actual Result of the last step**. It only opens on the machine that ran the tests (or
-  via OneDrive sync); others can find the file by name. The execution comment holds only the failure text, if any.
+- **Screenshots**: not uploaded as attachments (the Zephyr Cloud API has no documented attachment upload for
+  executions) and the image cannot be shown inside the field (tested). The **Actual Result of the last step** shows
+  `Screenshot: OneDrive folder > <run>/<PASSED|FAILED>/<file>.png`: the first part links to the shared folder
+  (`ZEPHYR_ARTIFACTS_LINK`), the second is the short path to find the file inside it. Without the link only the short
+  path is shown. The link only opens for people in your organization who have access to the folder. The execution
+  comment holds only the failure text, if any, and failure text in the Actual Result is HTML-escaped.
 
 ### Example full run
 
@@ -113,6 +118,7 @@ export TEST_USERNAME=<10-digit mobile> TEST_PASSWORD=<password>
 export ZEPHYR_TOKEN=<token> ZEPHYR_PROJECT_KEY=AMW ZEPHYR_CYCLE_KEY=AMW-R204
 export ZEPHYR_CASES_FOLDER="Mobile Automation"   # optional, this is the default
 export ARTIFACTS_DIR="$HOME/Library/CloudStorage/OneDrive-<org>/CIS/Automation Screenshots/Bayad App"
+export ZEPHYR_ARTIFACTS_LINK="<shared folder URL>"   # optional
 mvn test -Dgroups=device -Denv=qa -Ddevice=emulator
 ```
 
