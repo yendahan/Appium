@@ -85,7 +85,7 @@ pytest -m "unit or device" --env qa --device emulator   # includes risky tests
 For a full run without the money/lockout tests use `-m "unit or (device and not risky)"`.
 
 Artifacts: `artifacts/screenshots/<run>/PASSED|FAILED|RECEIPT`, `artifacts/diagnostics/` (page source, logcat on failure).
-Careful: `test_send_money.py` and `test_send_money_wallet.py` (same payments, entered from the Wallet tab) move real Php 10 on staging per test, `test_pay_via_qr.py` pays four QR codes (static QRs use the amount encoded in the QR) and `test_login.py` can lock the test account.
+Careful: `test_send_money.py` and `test_send_money_via_bayad_wallet.py` (same payments, entered from the Wallet tab) move real Php 10 on staging per test, `test_pay_via_qr.py` pays four QR codes (static QRs use the amount encoded in the QR) and `test_login.py` can lock the test account.
 
 ## Adding tests
 

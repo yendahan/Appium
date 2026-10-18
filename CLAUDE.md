@@ -23,7 +23,7 @@ Python 3.9+, pytest, Appium-Python-Client, Page Object Model. Ported from the Ja
 ## Gotchas
 - Send Money tests tap CONFIRM and move real Php 10 on staging per test (six per run). Do not run them casually.
 - `test_pay_via_qr.py` also taps CONFIRM (four payments per run): dynamic QRs pay Php 10, static QRs pay the amount encoded in the QR (e.g. Php 88.88).
-- `test_send_money_wallet.py` repeats the six Send Money payments, entering from the Wallet tab (six more per run).
+- `test_send_money_via_bayad_wallet.py` repeats the six Send Money payments, entering from the Wallet tab (six more per run).
 - `test_login.py` sends wrong passwords and can lock the test accounts ("blocked temporarily").
 - The Appium server runs without `adb_shell`, so avoid `mobile: shell`.
 - Intermittent emulator network loss or app crashes cause one-off failures; rerun before changing code.
