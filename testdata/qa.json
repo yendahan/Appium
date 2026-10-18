@@ -1,0 +1,41 @@
+{
+  "invalidLocators": [
+    "",
+    "   ",
+    "noseparator",
+    "unknown=abc",
+    "id="
+  ],
+  "validLocators": {
+    "id=com.example:id/title": "id",
+    "accessibilityId=Login": "accessibilityId",
+    "xpath=//android.widget.TextView": "xpath",
+    "text=Welcome": "text"
+  },
+  "credentials": {
+    "username": "${env:TEST_USERNAME}",
+    "password": "${env:TEST_PASSWORD}"
+  },
+  "invalidLogin": {
+    "username": "9000000000",
+    "password": "Wrong@Pass123"
+  },
+  "boundary": {
+    "elevenDigitMobile": "09123456789"
+  },
+  "sendMoney": {
+    "amount": "10",
+    "bayadWalletNumber": "9688528895",
+    "otherBank": {
+      "accountNumber": "111171201825",
+      "accountName": "Test Recipient",
+    "bankName": "Philippine National Bank"
+    },
+    "qr": {
+      "p2pStatic": "testdata/qr/qrp2p-static.png",
+      "p2pDynamic": "testdata/qr/qrp2p-dynamic.png",
+      "p2mStatic": "testdata/qr/qrp2m-static.png",
+      "p2mDynamic": "testdata/qr/qrp2m-dynamic.png"
+    }
+  }
+}
