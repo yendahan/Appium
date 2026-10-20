@@ -47,10 +47,11 @@ def test_each_case_sits_in_the_zephyr_folder_of_its_test_file():
 def test_all_cases_are_grouped_under_the_project_folders():
     grouped = groups()
     upgraded, asenso = "Android/Upgraded Consumer Account", "Android/Consumer Account with Asenso"
-    account = "Android/Asenso Account"
-    assert set(grouped) == {upgraded, asenso, account}
+    account, basic = "Android/Asenso Account", "Android/Basic Account"
+    assert set(grouped) == {upgraded, asenso, account, basic}
     assert len(grouped[upgraded]) == len(grouped[asenso])
     assert len(grouped[account]) == 5
+    assert len(grouped[basic]) == 7  # 3 registration + add money (2), pay bills, transactions
     assert sum(len(v) for v in grouped.values()) == len(CASES)
 
 

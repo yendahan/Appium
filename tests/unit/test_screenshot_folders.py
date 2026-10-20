@@ -40,7 +40,8 @@ def test_the_folder_you_set_then_the_project_folders_then_the_run_then_the_resul
     assert shot.read_bytes() == b"png" and shot.name.startswith("test_login-")
 
 
-def test_without_a_folder_set_that_level_is_left_out(tmp_path):
+def test_without_a_folder_set_that_level_is_left_out(tmp_path, monkeypatch):
+    monkeypatch.delenv("ZEPHYR_CASES_FOLDER", raising=False)  # a run's own setting must not leak into this test
     set_screenshot_subfolder("Android/Upgraded Consumer Account")
     shot = actions(tmp_path).screenshot("t", "FAILED")
     assert relative(shot.parent, tmp_path) == (

@@ -42,7 +42,7 @@ class CustomizeProfilePage(BasePage):
 
     def enter_nickname(self, nickname: str) -> "CustomizeProfilePage":
         self.actions.type(NICKNAME, nickname)
-        self.actions.tap(HEADING)  # drop focus so the keyboard closes (hide_keyboard() acts as Back and leaves the screen)
+        self.actions.press_enter()  # closes the keyboard (the Almost there! heading is not on screen while it is open)
         return self
 
     def is_next_enabled(self) -> bool:

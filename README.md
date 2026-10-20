@@ -19,6 +19,7 @@ Ported from the Java/TestNG framework, which is preserved on the `java-main` bra
 | `pages/` | Page objects (locators live here only) |
 | `conftest.py` | `--env/--device/--cfg` options, per-test `driver` fixture, screenshots/page source/logcat, Zephyr publishing, and the check that stops a run before any test when the Zephyr setup is wrong |
 | `tests/unit/` | Device-free tests (marker `unit`, the default) |
+| `tests/Android/Basic Account/` | Device tests of a Basic (not upgraded) account, logging in with `BASIC_USERNAME` / `BASIC_PASSWORD`: registration (moved here), Add Money over the counter (Php 300, plus the below-minimum error), Pay Bills, and Transaction History / Ongoing Activities screenshots; page objects `pages/add_money_page.py`, `pages/activity_page.py` |
 | `tests/Android/Asenso Account/` | Device tests of the Asenso service (Services > See All > Asenso): add money, withdraw, pay bills, my transactions, Account Management links; logs in with `ASENSO_USERNAME` / `ASENSO_PASSWORD`; page object `pages/asenso_page.py` |
 | `tests/Android/Consumer Account with Asenso/` | The same device tests as the folder below, as `test_asenso_*.py`, logging in with `ASENSO_USERNAME` / `ASENSO_PASSWORD`; same `risky` payments and lockouts |
 | `tests/Android/Upgraded Consumer Account/` | Tests needing Appium + an Android device (marker `device`; money/lockout tests also `risky`); `tests/Android/helpers.py` holds the shared login helper |
@@ -52,9 +53,10 @@ Skip this if `ZEPHYR_TOKEN` is unset: the reporter is then off and tests run nor
 ## Configure
 
 1. App under test: `config/env/qa.properties` sets `app.package`/`app.activity` (or `app.path` for an APK) and `app.landing.locator`.
-2. Device: `--device emulator|physical`. For several devices set `device.udid` (env var `DEVICE_UDID`).
+2. Device: `--device emulator|physical` is a profile name from `config/devices/`, never an adb serial (`--device <serial>` fails with "Config file ... not found"). For a real phone use `--device physical` and give its serial from `adb devices` with `--cfg device.udid=<serial>` or env var `DEVICE_UDID`; the same applies when several devices are attached.
 3. Secrets never go in files: `export TEST_USERNAME=<10-digit mobile, no leading 0> TEST_PASSWORD=<password>`.
    For the Asenso account tests also `export ASENSO_USERNAME=<10-digit mobile, no leading 0> ASENSO_PASSWORD=<password>` (without them the Asenso login tests fail).
+   For the Basic account tests also `export BASIC_USERNAME=<10-digit mobile, no leading 0> BASIC_PASSWORD=<password>`.
    For the registration tests set `REG_MOBILE` (a new number each run) and `REG_PASSWORD` per run; `REG_OTP` is optional (default `111111`).
 4. Any key can be overridden: `--cfg appium.url=http://host:4723` or env var `APPIUM_URL`.
 
@@ -69,9 +71,21 @@ pytest -m "device and not risky" --env qa --device emulator "tests/Android/Consu
 pytest -m device --device physical --cfg device.udid=<serial>
 ```
 
+### Run on a physical device
+
+1. Turn on USB debugging, connect the phone and check that `adb devices` lists it as `device` (not `unauthorized`).
+2. Start `appium` in another terminal and leave it running (`curl http://127.0.0.1:4723/status` should answer). Without it every test errors with "Could not reach Appium server ... Connection refused".
+3. Export the credentials, then run with the `physical` profile and the serial:
+
+```bash
+pytest -m "device and not risky" --env qa --device physical --cfg device.udid=<serial>   # or: export DEVICE_UDID=<serial>
+```
+
+Gesture or 3-button navigation: locators and the Back key work in both. Taps by screen position (`tap_at`, used in the verification, customize profile, pay bills, add money and Asenso pages) use percentages of the screen, so another phone or navigation mode can shift them by a few percent; if such a tap misses, adjust that page's `*_X` / `*_Y` constant.
+
 ### Asenso consumer account tests
 
-`tests/Android/Consumer Account with Asenso/` holds the same seven test files as `Upgraded Consumer Account`, named `test_asenso_*.py` (app launch, login, registration, pay bills, pay via QR, send money, send money via Bayad wallet). The app flow and page objects are the same; only the account differs. They log in with `ASENSO_USERNAME` / `ASENSO_PASSWORD` (testdata node `asensoCredentials`, never stored); every other test-data node (`sendMoney`, `payBills`, `registration`, QR images) is shared with the Upgraded tests. `sendMoney.bayadWalletNumber` holds the recipient numbers by account type (`upgraded`, `asenso`, `basic`): the Upgraded tests send to the Asenso account, the Asenso tests to the Upgraded one (`basic` is not used yet). Markers and risks are identical: the Send Money, Pay via QR and Pay Bills copies pay for real on staging, the login copy can lock the account, and the registration copy registers a real account. Their Zephyr cases are the Upgraded ones with an `Asenso ` prefix (e.g. `Asenso Login: wrong password is rejected`), in the `Android/Consumer Account with Asenso` folder. The Pay Bills and Registration sections below apply to the `test_asenso_pay_bills.py` and `test_asenso_registration.py` copies as well.
+`tests/Android/Consumer Account with Asenso/` holds the same six test files as `Upgraded Consumer Account`, named `test_asenso_*.py` (app launch, login, pay bills, pay via QR, send money, send money via Bayad wallet; there is no registration copy, registration lives in Basic Account). The app flow and page objects are the same; only the account differs. They log in with `ASENSO_USERNAME` / `ASENSO_PASSWORD` (testdata node `asensoCredentials`, never stored); every other test-data node (`sendMoney`, `payBills`, `registration`, QR images) is shared with the Upgraded tests. `sendMoney.bayadWalletNumber` holds the recipient numbers by account type (`upgraded`, `asenso`, `basic`): the Upgraded tests send to the Asenso account, the Asenso tests to the Upgraded one (`basic` is not used yet). Markers and risks are identical: the Send Money, Pay via QR and Pay Bills copies pay for real on staging, the login copy can lock the account, and their Zephyr cases are the Upgraded ones with an `Asenso ` prefix (e.g. `Asenso Login: wrong password is rejected`), in the `Android/Consumer Account with Asenso` folder. The Pay Bills and Registration sections below apply to the `test_asenso_pay_bills.py` and `test_asenso_registration.py` copies as well.
 
 ```bash
 export ASENSO_USERNAME=<10-digit mobile, no leading 0> ASENSO_PASSWORD=<password>
@@ -105,9 +119,28 @@ pytest -m "device and not risky" --env qa --device emulator "tests/Android/Asens
 pytest -m device --env qa --device emulator "tests/Android/Upgraded Consumer Account/test_pay_bills.py"
 ```
 
+### Basic Account tests
+
+`tests/Android/Basic Account/` (`test_basic_account_*.py`) uses the Basic account (`BASIC_USERNAME` / `BASIC_PASSWORD`, never stored):
+
+| Test | Marker | What it does |
+|---|---|---|
+| `add_money` (2 tests) | none | Add Money > Over the Counter > Bayad Center: Php 300 (`basicAccount.addMoney.amount`) reaches Payment Confirmation (CONFIRM is not tapped, nothing is requested); Php 100 (`belowMinimum`) shows "The minimum cash-in amount is 300." and NEXT stays disabled |
+| `pay_bills` | `risky` | Pay Bills, Manila Water (`payBills` data), Php 30 plus a Php 10 fee |
+| `transactions` | none | Activity tab: opens Transaction History and Ongoing Activities and saves a screenshot of each (an empty account shows "No transactions yet.") |
+| `registration` | `risky` | see "Registration tests" below |
+
+```bash
+export BASIC_USERNAME=<10-digit mobile, no leading 0> BASIC_PASSWORD=<password>
+pytest -m device --env qa --device emulator "tests/Android/Basic Account"          # all, including the Pay Bills payment and registration
+pytest -m "device and not risky" --env qa --device emulator "tests/Android/Basic Account"   # safe ones only
+```
+
+Zephyr cases are named `Basic Account: ...` in the `Android/Basic Account` folder.
+
 ### Registration tests
 
-`tests/Android/Upgraded Consumer Account/test_registration.py` (marked `device` and `risky`) covers three scenarios, in this order:
+`tests/Android/Basic Account/test_basic_account_registration.py` (marked `device` and `risky`) covers three scenarios, in this order:
 
 1. **Invalid number**: `0999999999` (a leading 0 is rejected). The app shows "Invalid mobile number format" and SIGN UP! stays disabled; nothing is sent to staging.
 2. **Already registered**: `9764912641`. After the OTP the app shows the login page instead of creating an account.
@@ -115,7 +148,7 @@ pytest -m device --env qa --device emulator "tests/Android/Upgraded Consumer Acc
 
 ```bash
 REG_MOBILE=<new 10-digit number, no leading 0> REG_PASSWORD='<9+ chars, capital, number, symbol>' \
-  pytest -m device --env qa --device emulator "tests/Android/Upgraded Consumer Account/test_registration.py"
+  pytest -m device --env qa --device emulator "tests/Android/Basic Account/test_basic_account_registration.py"
 ```
 
 - `REG_MOBILE` and `REG_PASSWORD` are never stored. Without them the new-number test is skipped (the other two still run). Use a different `REG_MOBILE` every run: each run registers a real staging account, and that number cannot be used again.
@@ -129,23 +162,24 @@ REG_MOBILE=<new 10-digit number, no leading 0> REG_PASSWORD='<9+ chars, capital,
 ```bash
 export TEST_USERNAME=<10-digit mobile, no leading 0> TEST_PASSWORD=<password>
 export ASENSO_USERNAME=<10-digit mobile, no leading 0> ASENSO_PASSWORD=<password>   # the Asenso account tests
+export BASIC_USERNAME=<10-digit mobile, no leading 0> BASIC_PASSWORD=<password>      # the Basic account tests
 # Registration test: a number never registered before, new every run. Without these only the new-number test is skipped.
 export REG_MOBILE=<new 10-digit number, no leading 0> REG_PASSWORD='<9+ chars, capital, number, symbol>'   # REG_OTP optional (default 111111)
 # Zephyr Scale reporting is optional (token never in a file; see "First time with Zephyr Scale"). When ZEPHYR_TOKEN is set,
 # ZEPHYR_CYCLE_NAME and ZEPHYR_CASES_FOLDER are required, or the run stops before any test starts.
 export ZEPHYR_TOKEN=<token> ZEPHYR_PROJECT_KEY=AMW ZEPHYR_CYCLE_NAME="<cycle name for this run>"   # a new cycle "<name> <date time>" every run
-export ZEPHYR_CASES_FOLDER="<top folder for this run>"   # any name; Android/Upgraded Consumer Account, Android/Consumer Account with Asenso and Android/Asenso Account are created inside it, with the project's cases
+export ZEPHYR_CASES_FOLDER="<top folder for this run>"   # any name; Android/Upgraded Consumer Account, Android/Consumer Account with Asenso, Android/Asenso Account and Android/Basic Account are created inside it, with the project's cases
 export ARTIFACTS_DIR="$HOME/Library/CloudStorage/OneDrive-<org>/CIS/Automation Screenshots/Bayad App"   # optional, default ./artifacts
 export ZEPHYR_ARTIFACTS_LINK="<shared folder URL>"                                                        # optional
 emulator -avd <name>      # or connect a device; check with adb devices
 appium                    # in another terminal
-pytest -m "unit or device" --env qa --device emulator   # includes risky tests
+pytest -m "unit or device" --env qa --device emulator   # includes risky tests; on a real phone: --device physical --cfg device.udid=<serial>
 ```
 
-For a full run without the money/lockout tests use `-m "unit or (device and not risky)"`. That also leaves out all registration tests, because `test_registration.py` is marked `risky`; to run only those, see "Registration tests" above.
+For a full run without the money/lockout tests use `-m "unit or (device and not risky)"`. That also leaves out all registration tests, because `test_basic_account_registration.py` is marked `risky`; to run only those, see "Registration tests" above.
 
-Artifacts: `<ARTIFACTS_DIR>/Screenshots/<ZEPHYR_CASES_FOLDER>/Android/<Upgraded Consumer Account|Consumer Account with Asenso|Asenso Account>/<run date-time>/PASSED|FAILED|RECEIPT/` (the same folder tree as Zephyr: the folder you export for the run, then the project's test folders, created on demand; without `ZEPHYR_CASES_FOLDER` the first level is left out), and `<ARTIFACTS_DIR>/diagnostics/` (page source, logcat on failure).
-Careful: `test_send_money.py` and `test_send_money_via_bayad_wallet.py` (same payments, entered from the Wallet tab) move real Php 10 on staging per test, `test_pay_via_qr.py` pays four QR codes (static QRs use the amount encoded in the QR) and `test_login.py` can lock the test account. `test_registration.py` registers a real staging account per run (new-number test). `test_pay_bills.py` pays Manila Water Php 30 plus a Php 10 fee per run. The `Consumer Account with Asenso` copies repeat all of this for the Asenso account, so a full run (`-m device`) pays everything twice. Both registration tests read the same `REG_MOBILE`, and a number can be registered only once, so run the two `test_registration.py` / `test_asenso_registration.py` files in separate runs with a different `REG_MOBILE` each. A full run therefore makes real payments and registers real accounts: run it only on purpose.
+Artifacts: `<ARTIFACTS_DIR>/Screenshots/<ZEPHYR_CASES_FOLDER>/Android/<Upgraded Consumer Account|Consumer Account with Asenso|Asenso Account|Basic Account>/<run date-time>/PASSED|FAILED|RECEIPT/` (the same folder tree as Zephyr: the folder you export for the run, then the project's test folders, created on demand; without `ZEPHYR_CASES_FOLDER` the first level is left out), and `<ARTIFACTS_DIR>/diagnostics/` (page source, logcat on failure).
+Careful: `test_send_money.py` and `test_send_money_via_bayad_wallet.py` (same payments, entered from the Wallet tab) move real Php 10 on staging per test, `test_pay_via_qr.py` pays four QR codes (static QRs use the amount encoded in the QR) and `test_login.py` can lock the test account. `test_basic_account_registration.py` registers a real staging account per run (new-number test). `test_pay_bills.py` pays Manila Water Php 30 plus a Php 10 fee per run. The `Consumer Account with Asenso` copies repeat all of this for the Asenso account, so a full run (`-m device`) pays everything twice. Both registration tests read the same `REG_MOBILE`, and a number can be registered only once, so use a new `REG_MOBILE` for every run. A full run therefore makes real payments and registers real accounts: run it only on purpose.
 
 ## Adding tests
 
@@ -158,7 +192,7 @@ A test that moves real money or sends bad logins also gets `@pytest.mark.risky`.
 Mark tests with `@pytest.mark.zephyr` and define their case in `framework/zephyr_cases.py`. Set `ZEPHYR_TOKEN` (never in a file). When it is set, also set:
 
 - `ZEPHYR_CYCLE_NAME` (required): each run creates a new cycle named `<name> <date time>`.
-- `ZEPHYR_CASES_FOLDER` (required, any name or `parent/child` path you choose): the top folder for the run. The project's test folders (`Android/Upgraded Consumer Account`, `Android/Consumer Account with Asenso` and `Android/Asenso Account`) are created inside it if missing, and any defined case they lack is created there.
+- `ZEPHYR_CASES_FOLDER` (required, any name or `parent/child` path you choose): the top folder for the run. The project's test folders (`Android/Upgraded Consumer Account`, `Android/Consumer Account with Asenso`, `Android/Asenso Account` and `Android/Basic Account`) are created inside it if missing, and any defined case they lack is created there.
 - `ZEPHYR_PROJECT_KEY` (default `AMW`) and `ZEPHYR_ARTIFACTS_LINK` (shared screenshot folder URL, shown in the last step's actual result) are optional.
 
 The run stops before any test starts, with the reason, if the cycle name or folder setting is missing or if creating the folder, its cases or the cycle fails (no permission, Zephyr down). Without a token the reporter does nothing. Once the tests are running, a result that cannot be published only logs a warning and never changes a test result.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Optional
 
 from appium.webdriver.common.appiumby import AppiumBy
@@ -17,6 +18,7 @@ SEARCH_FIELD = (XPATH, "//android.widget.EditText[@hint='Search Billers']")
 NICKNAME = (XPATH, "//android.widget.EditText[@hint='Preferred Biller Nickname']")
 ACCOUNT_NUMBER = (XPATH, "//android.widget.EditText[@hint='Account Number']")
 AMOUNT = (XPATH, "//android.widget.EditText[@hint='Amount']")
+SERVER_ERROR = (A11Y, "Internal server error")  # the app's error popup when the billers or a search fail
 FORM_HEADING = (A11Y, "Enter Biller Information")
 NEXT = (A11Y, "NEXT")
 CONFIRM = (A11Y, "CONFIRM")
@@ -45,15 +47,26 @@ class PayBillsPage(BasePage):
 
     def wait_for_billers(self) -> "PayBillsPage":
         """Waits for the biller categories (also the entry point when Pay Bills was opened from another screen)."""
-        self.actions.wait_visible(BILLERS_LOADED, BILLERS_TIMEOUT)
+        deadline = time.monotonic() + BILLERS_TIMEOUT
+        while not self.actions.is_visible(BILLERS_LOADED, 2):
+            self.fail_on_server_error()
+            if time.monotonic() > deadline:
+                self.actions.wait_visible(BILLERS_LOADED, 1)  # raises with the usual "not visible" message
         return self
+
+    def fail_on_server_error(self) -> None:
+        """Fails the test when the app shows its 'Internal server error' popup (a backend failure, not a flaky wait)."""
+        if self.actions.is_visible(SERVER_ERROR, 1):
+            raise AssertionError("Pay Bills showed 'Internal server error'")
 
     def pay(self, biller: str, account_number: str, nickname: str, amount: str) -> "PayBillsPage":
         """Searches `biller`, opens it, fills the biller form and taps NEXT."""
         a = self.actions
         a.tap_at(SEARCH_ICON_X, SEARCH_ICON_Y)
         a.type(SEARCH_FIELD, biller)
-        a.wait_visible(_biller_row(biller))
+        if not a.is_visible(_biller_row(biller)):
+            self.fail_on_server_error()
+            a.wait_visible(_biller_row(biller), 1)  # raises with the usual "not visible" message
         a.tap_at(FIRST_RESULT_X, FIRST_RESULT_Y)
         a.wait_visible(NICKNAME, FORM_TIMEOUT)  # the form shows a loading skeleton first
         a.type(NICKNAME, nickname)

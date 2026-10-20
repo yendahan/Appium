@@ -81,19 +81,19 @@ CASES: Dict[str, Case] = {
         LOGIN_FORM + [("Enter an 11-digit mobile number (09123456789)",
                        "The field keeps only the first 10 digits")]),
     # --- registration -------------------------------------------------------------------------------------------
-    "test_registration.py::test_invalid_mobile_number_is_rejected": Case(
-        "Registration: invalid mobile number is rejected",
+    "test_basic_account_registration.py::test_invalid_mobile_number_is_rejected": Case(
+        "Basic Account: Registration: invalid mobile number is rejected",
         "Negative: a number starting with 0 shows the format error and cannot be submitted.",
         [APP, ("Enter the mobile number 0999999999", "'Invalid mobile number format' is shown"),
          ("Check the SIGN UP! button", "SIGN UP! stays disabled and the Verification Code screen is not reached")]),
-    "test_registration.py::test_already_registered_mobile_shows_login": Case(
-        "Registration: already registered mobile number shows the login page",
+    "test_basic_account_registration.py::test_already_registered_mobile_shows_login": Case(
+        "Basic Account: Registration: already registered mobile number shows the login page",
         "Edge: a number that is already registered ends on the login page instead of creating an account.",
         [("Open the app, accept the Privacy Notice and enter the registered number 9764912641", "SIGN UP! is enabled"),
          ("Tap SIGN UP!", "The Verification Code screen is displayed"),
          ("Enter the OTP", "The login page is displayed")]),
-    "test_registration.py::test_register_with_valid_mobile_and_otp": Case(
-        "Registration: new mobile number completes registration",
+    "test_basic_account_registration.py::test_register_with_valid_mobile_and_otp": Case(
+        "Basic Account: Registration: new mobile number completes registration",
         "Positive: a new (not yet registered) number registers and reaches the success page.",
         [("Open the app, accept the Privacy Notice and enter a new mobile number", "SIGN UP! is enabled"),
          ("Tap SIGN UP! and enter the OTP", "Complete Your Profile is displayed"),
@@ -156,6 +156,7 @@ CASES: Dict[str, Case] = {
 CASES.update({
     key.replace("test_", "test_asenso_", 1): Case(f"Asenso {case.name}", case.objective, case.steps)
     for key, case in list(CASES.items())
+    if not key.startswith("test_basic_account_")  # Basic Account tests have no Asenso copy
 })
 
 
@@ -198,6 +199,38 @@ CASES.update({
 })
 
 
+# --- Basic Account (a Basic, not upgraded, consumer account) ------------------------------------------------------
+CASES.update({
+    "test_basic_account_add_money.py::test_over_the_counter_accepts_the_minimum_amount": Case(
+        "Basic Account: Add Money Over the Counter accepts Php 300",
+        "Positive: Add Money > Over the Counter > Bayad Center accepts the minimum amount (Php 300) and reaches "
+        "Payment Confirmation (CONFIRM is not tapped).",
+        LOGIN + [("Tap Add Money, choose Over the Counter and Bayad Center", "The amount form is displayed"),
+                 ("Enter 300 and tap NEXT", "The Payment Confirmation screen is displayed")]),
+    "test_basic_account_add_money.py::test_over_the_counter_below_minimum_shows_an_error": Case(
+        "Basic Account: Add Money Over the Counter below the minimum shows an error",
+        "Negative: an amount under the Php 300 minimum shows the minimum cash-in error and cannot be submitted.",
+        LOGIN + [("Tap Add Money, choose Over the Counter and Bayad Center", "The amount form is displayed"),
+                 ("Enter 100", "'The minimum cash-in amount is 300.' is shown"),
+                 ("Check NEXT", "NEXT stays disabled")]),
+    "test_basic_account_pay_bills.py::test_basic_pay_bills_manila_water": Case(
+        "Basic Account: Pay Bills with a Manila Water account shows a receipt",
+        "Positive: Pay Bills accepts a valid Manila Water account (Php 30) and shows a receipt after CONFIRM.",
+        LOGIN + [("Tap Services, then Pay Bills, and wait for the billers to load", "The biller categories are displayed"),
+                 ("Tap the search button, search Manila Water and open it",
+                  "The Enter Biller Information form is displayed"),
+                 ("Enter nickname, account number 12358959 and amount 30, then tap NEXT",
+                  "Payment Summary shows total Php 40.00 (Php 30 + Php 10 fee)"),
+                 ("Tap CONFIRM", "The receipt shows 'Payment Successful!'")]),
+    "test_basic_account_transactions.py::test_transaction_history_and_ongoing_activities_screenshots": Case(
+        "Basic Account: Transaction History and Ongoing Activities are shown and captured",
+        "Positive: the Activity tab shows Transaction History and Ongoing Activities; a screenshot is saved of each.",
+        LOGIN + [("Tap the Activity tab", "The Transaction History and Ongoing Activities tabs are displayed"),
+                 ("Open Transaction History and take a screenshot", "The history list or the empty message is displayed"),
+                 ("Open Ongoing Activities and take a screenshot", "The activities list or the empty message is displayed")]),
+})
+
+
 def case_for(nodeid: str) -> Optional[Case]:
     """The case definition for a pytest node id such as ``tests/Android/Upgraded Consumer Account/test_login.py::test_x[param]``."""
     path, _, rest = nodeid.partition("::")
@@ -235,6 +268,10 @@ FAILURE_HINTS: List[Tuple[str, str]] = [
     ("Receipt should show a success", "success message"),
     ("Transaction History", "transaction history tab"), ("at least one transaction", "at least one transaction"),
     ("should open", "opens its own screen"), ("Back from", "opens its own screen"),
+    ("Payment Confirmation should show", "payment confirmation screen"),
+    ("minimum cash-in error", "minimum cash-in amount is 300"), ("NEXT must stay disabled", "next stays disabled"),
+    ("Transaction History should show", "history list or the empty message"),
+    ("Ongoing Activities should show", "activities list or the empty message"),
     ("Payment Successful!", "'payment successful!'"), ("Successfully Sent!", "'successfully sent!'"),
 ]
 

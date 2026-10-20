@@ -27,7 +27,7 @@ class ProfilePage(BasePage):
     def enter_name(self, first: str, last: str) -> "ProfilePage":
         self.actions.type(FIRST_NAME, first)
         self.actions.type(LAST_NAME, last)
-        self.actions.tap(TITLE)  # drop focus so the keyboard closes (hide_keyboard() acts as Back and leaves the screen)
+        self.actions.press_enter()  # closes the keyboard (tapping the title leaves it open on a tall screen, and it hides the date field)
         return self
 
     def pick_birth_date(self, year: int, day: int) -> "ProfilePage":

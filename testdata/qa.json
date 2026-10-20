@@ -20,6 +20,10 @@
     "username": "${env:ASENSO_USERNAME}",
     "password": "${env:ASENSO_PASSWORD}"
   },
+  "basicCredentials": {
+    "username": "${env:BASIC_USERNAME}",
+    "password": "${env:BASIC_PASSWORD}"
+  },
   "invalidLogin": {
     "username": "9000000000",
     "password": "Wrong@Pass123"
@@ -49,6 +53,13 @@
   "registration": {
     "nickname": "Yen",
     "avatarFile": "avatar.jpg"
+  },
+  "basicAccount": {
+    "addMoney": {
+      "partner": "Bayad Center",
+      "amount": "300",
+      "belowMinimum": "100"
+    }
   },
   "asensoAccount": {
     "addMoney": {

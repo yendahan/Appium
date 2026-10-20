@@ -80,10 +80,11 @@ class SendMoneyPage(BasePage):
             opens += 1
         a.wait_visible(result).click()  # list rows are not flagged clickable, so skip the clickable wait
         a.type(ACCOUNT_NO, account_number)
+        a.press_enter()  # Done on the number pad: the Account Name field only shows once the account number is submitted
         a.type(ACCOUNT_NAME, account_name)
-        a.tap(RECIPIENT_HEADING)  # drop focus so the keyboard closes; hide_keyboard() acts as Back here and leaves the form
+        a.press_enter()  # drop focus so the keyboard closes; the Recipient's Details heading is gone once the name shows
         a.type(BANK_AMOUNT, amount)
-        a.tap(ACCOUNT_NAME)  # blur: the amount is only committed when it loses focus
+        a.press_enter()  # blur: the amount is only committed when it loses focus
         a.tap(NEXT)
         return self
 

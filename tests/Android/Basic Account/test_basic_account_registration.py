@@ -1,6 +1,6 @@
 """WARNING: the new-number test registers a real account on staging per run.
 
-Supply that number every run (never stored): REG_MOBILE=9100000001 pytest -m device "tests/Android/Upgraded Consumer Account/test_registration.py"
+Supply that number every run (never stored): REG_MOBILE=9100000001 pytest -m device "tests/Android/Basic Account/test_basic_account_registration.py"
 REG_PASSWORD is also required. REG_OTP overrides the default test OTP. The new-number test is last on purpose: requesting a second OTP for the
 same number within ~2 minutes shows "you still have a valid request"."""
 import os

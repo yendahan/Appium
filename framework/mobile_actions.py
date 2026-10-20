@@ -116,6 +116,11 @@ class MobileActions:
         LOG.info("Press device Back")
         self.driver.back()
 
+    def press_enter(self) -> None:
+        """The keyboard's Enter/Done key, for forms that only move on once the field is submitted."""
+        LOG.info("Press Enter")
+        self.driver.press_keycode(66)  # KEYCODE_ENTER
+
     def press_digits(self, digits: str) -> None:
         """Sends digits as hardware key presses to the focused widget (value not logged: may be a code)."""
         if not digits.isdigit():
@@ -162,10 +167,14 @@ class MobileActions:
                     f'.scrollIntoView(new UiSelector().text("{locator_parser.escape_ui_selector(text)}"))')
         try:
             self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, selector)
-            return True
         except NoSuchElementException:
-            LOG.warning("Text '%s' not found after %d swipes", text, max_swipes)
-            return False
+            pass
+        # UiScrollable can resolve to the scrollable container even when the target never showed, so confirm it
+        if self.driver.find_elements(AppiumBy.ANDROID_UIAUTOMATOR,
+                                     f'new UiSelector().text("{locator_parser.escape_ui_selector(text)}")'):
+            return True
+        LOG.warning("Text '%s' not found after %d swipes", text, max_swipes)
+        return False
 
     def scroll_to_description(self, description: str, max_swipes: Optional[int] = None) -> bool:
         """Like scroll_to_text, but matches the accessibility description exactly (e.g. a year in a date picker)."""
@@ -179,10 +188,13 @@ class MobileActions:
                     f'.scrollIntoView(new UiSelector().description("{locator_parser.escape_ui_selector(description)}"))')
         try:
             self.driver.find_element(AppiumBy.ANDROID_UIAUTOMATOR, selector)
-            return True
         except NoSuchElementException:
-            LOG.warning("Description '%s' not found after %d swipes", description, max_swipes)
-            return False
+            pass
+        if self.driver.find_elements(AppiumBy.ANDROID_UIAUTOMATOR,
+                                     f'new UiSelector().description("{locator_parser.escape_ui_selector(description)}")'):
+            return True
+        LOG.warning("Description '%s' not found after %d swipes", description, max_swipes)
+        return False
 
     # --- artifacts ---------------------------------------------------------------------
     def screenshot(self, name: str, subfolder: Optional[str] = None) -> Path:

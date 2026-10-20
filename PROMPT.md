@@ -27,6 +27,7 @@ It was ported from Java/TestNG, which lives on branch `java-main`. Read CLAUDE.m
 ## Recipes
 - New page: subclass BasePage, keep locators as class constants, delegate to actions, return the next page.
 - tests/Android/Consumer Account with Asenso/ mirrors Upgraded Consumer Account as test_asenso_*.py (Zephyr cases are derived in zephyr_cases.py); keep both in sync.
+- tests/Android/Basic Account/ covers the Basic account (pages/add_money_page.py, activity_page.py; registration was moved here); its cases are defined explicitly in zephyr_cases.py.
 - tests/Android/Asenso Account/ covers the Asenso service (pages/asenso_page.py, test_asenso_account_*.py); its cases are defined explicitly in zephyr_cases.py.
 - New device test: put it in tests/Android/Upgraded Consumer Account/ (the folder name has spaces: quote the path in commands), set `pytestmark = [device]` (+ `risky` if it moves money or
   sends bad logins), add `@pytest.mark.zephyr(...)` if a case exists, reuse `helpers.log_in_to_home`, load

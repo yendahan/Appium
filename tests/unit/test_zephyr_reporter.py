@@ -14,7 +14,7 @@ SUB = "Android/Upgraded Consumer Account"  # where the test files sit under test
 LOGIN_TEST = "tests/Android/Upgraded Consumer Account/test_login.py::test_wrong_password_is_rejected"
 LOGIN_CASE = zephyr_cases.CASES["test_login.py::test_wrong_password_is_rejected"].name
 # These tests exercise one project folder; the Asenso copies of the cases are covered in test_zephyr_cases.py.
-UPGRADED = {k: c for k, c in zephyr_cases.CASES.items() if "test_asenso_" not in k}
+UPGRADED = {k: c for k, c in zephyr_cases.CASES.items() if "test_asenso_" not in k and "test_basic_account_" not in k}
 ALL_CASES = {c.name: f"AMW-T{i}" for i, c in enumerate(UPGRADED.values(), start=1)}
 
 

@@ -22,4 +22,4 @@ def test_my_transactions_shows_history(asenso):
     asenso.open_my_transactions()
     assert asenso.is_transaction_history_displayed(HISTORY_TIMEOUT), "Activity > Transaction History should show"
     assert asenso.transaction_rows(), "Transaction History should list at least one transaction"
-    asenso.actions.screenshot("asensoMyTransactions")
+    asenso.actions.screenshot("asensoMyTransactions", "PASSED")

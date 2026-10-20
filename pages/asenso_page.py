@@ -139,7 +139,7 @@ class AsensoPage(BasePage):
                 a.tap(BACK)
             else:
                 a.press_back()  # web pages (terms, privacy, manual) have no Back button of their own
-            if a.is_visible(YES_GO_BACK, 2):
+            if a.is_visible(YES_GO_BACK, 5):  # the confirmation dialog can take a few seconds to show
                 a.tap(YES_GO_BACK)
             if a.is_visible(GENERAL_SETTINGS, 5):
                 return True

@@ -35,6 +35,7 @@ def test_account_management_links_open_their_screens(account_management):
         assert account_management.is_link_displayed(link, SCREEN_TIMEOUT), f"'{link}' link should be listed"
         account_management.open_link(link)
         assert account_management.is_heading_displayed(heading, SCREEN_TIMEOUT), f"'{link}' should open '{heading}'"
-        account_management.actions.screenshot(f"asensoAccountManagement-{link}")
+        account_management.actions.screenshot(f"asensoAccountManagement-{link}", "PASSED")
         assert account_management.back_to_account_management(), f"Back from '{link}' should return to Account Management"
+    account_management.actions.swipe("up")  # on a taller screen the list runs past the bottom edge: scroll FAQ into view
     assert account_management.is_link_displayed("FAQ"), "'FAQ' link should be listed"

@@ -5,6 +5,7 @@ from pages.biometric_setup_page import BiometricSetupPage
 from pages.privacy_notice_page import PrivacyNoticePage
 
 ASENSO = "asensoCredentials"  # testdata node for the Asenso account tests
+BASIC = "basicCredentials"  # testdata node for the Basic account tests
 LOGIN_TIMEOUT = 60  # login + biometric screen can take 20s+ on a slow emulator
 
 
