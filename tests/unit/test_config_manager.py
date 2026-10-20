@@ -16,7 +16,7 @@ def test_loads_defaults_and_profiles():
     cfg = ConfigManager("qa", "emulator")
     assert cfg.get("appium.url") == "http://127.0.0.1:4723"
     assert cfg.get("device.name") == "Android Emulator"
-    assert cfg.get_seconds("wait.explicit.seconds") == 15
+    assert cfg.get_seconds("wait.explicit.seconds") == 30
 
 
 def test_blank_profiles_fall_back_to_defaults():

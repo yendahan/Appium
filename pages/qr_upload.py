@@ -21,7 +21,7 @@ def upload_qr_from_gallery(actions: MobileActions, driver: Any, image: Path, qr_
 
     `qr_screen` is the locator that reopens the QR screen if Back closes it while recovering from an empty picker.
     """
-    _push_to_gallery(driver, image)
+    push_to_gallery(driver, image)
     actions.tap(UPLOAD_QR)
     if not actions.is_visible(NEWEST_PHOTO, 8):
         if not actions.is_visible(UPLOAD_QR, 2):
@@ -33,11 +33,11 @@ def upload_qr_from_gallery(actions: MobileActions, driver: Any, image: Path, qr_
     actions.tap(PICKER_DONE)
 
 
-def _push_to_gallery(driver: Any, image: Path) -> None:
+def push_to_gallery(driver: Any, image: Path) -> None:
     try:
         remote = GALLERY_DIR + image.name
         driver.push_file(remote, base64.b64encode(image.read_bytes()).decode("ascii"))
         driver.execute_script("mobile: broadcast", {
             "action": "android.intent.action.MEDIA_SCANNER_SCAN_FILE", "uri": f"file://{remote}"})
     except OSError as e:
-        raise FrameworkException(f"Could not push QR image {image}") from e
+        raise FrameworkException(f"Could not push image {image}") from e

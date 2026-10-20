@@ -8,8 +8,8 @@ from pages.privacy_notice_page import PrivacyNoticePage
 
 pytestmark = [pytest.mark.device, pytest.mark.risky]
 
-LOGIN_TIMEOUT = 20
-ERROR_TIMEOUT = 15
+LOGIN_TIMEOUT = 60
+ERROR_TIMEOUT = 30
 NEGATIVE_TIMEOUT = 3
 
 
@@ -27,7 +27,7 @@ def login_page(driver) -> LoginPage:
     return page
 
 
-@pytest.mark.zephyr("AMW-T1134")
+@pytest.mark.zephyr
 def test_valid_credentials_reach_home(driver, login_page, data):
     """Positive: valid credentials reach the home screen."""
     creds = data.node("credentials")
@@ -37,7 +37,7 @@ def test_valid_credentials_reach_home(driver, login_page, data):
     assert biometric.skip().is_displayed(LOGIN_TIMEOUT), "Home screen should show after skipping biometrics"
 
 
-@pytest.mark.zephyr("AMW-T1135")
+@pytest.mark.zephyr
 def test_unknown_account_is_rejected(driver, login_page, data):
     """Negative: unknown account is rejected with an error and can be retried."""
     bad = data.node("invalidLogin")
@@ -48,7 +48,7 @@ def test_unknown_account_is_rejected(driver, login_page, data):
     assert not HomePage(driver).is_displayed(NEGATIVE_TIMEOUT), "Must not reach home"
 
 
-@pytest.mark.zephyr("AMW-T1136")
+@pytest.mark.zephyr
 def test_wrong_password_is_rejected(driver, login_page, data):
     """Negative: valid username with a wrong password never reaches home."""
     creds = data.node("credentials")
@@ -57,7 +57,7 @@ def test_wrong_password_is_rejected(driver, login_page, data):
     assert not HomePage(driver).is_displayed(NEGATIVE_TIMEOUT)
 
 
-@pytest.mark.zephyr("AMW-T1137")
+@pytest.mark.zephyr
 def test_submit_is_disabled_until_both_fields_are_filled(driver, login_page, data):
     """Edge: LOG IN stays disabled for an empty form and for a half-filled form."""
     assert not login_page.is_submit_enabled(), "Empty form must not be submittable"
@@ -66,7 +66,7 @@ def test_submit_is_disabled_until_both_fields_are_filled(driver, login_page, dat
     assert not HomePage(driver).is_displayed(NEGATIVE_TIMEOUT)
 
 
-@pytest.mark.zephyr("AMW-T1138")
+@pytest.mark.zephyr
 def test_mobile_field_is_limited_to_ten_characters(driver, login_page, data):
     """Boundary: the mobile field keeps at most 10 characters."""
     eleven = data.node("boundary")["elevenDigitMobile"]

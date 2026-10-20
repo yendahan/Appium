@@ -20,13 +20,15 @@ It was ported from Java/TestNG, which lives on branch `java-main`. Read CLAUDE.m
 - Plain `pytest` runs unit tests only. Never run `-m device` or `-m risky` without asking me first.
   Safe device run: `pytest -m "device and not risky"`. Note that `-m device` alone includes risky tests.
 - Send-money tests move real Php 10 each. test_login.py can lock accounts.
-- Credentials come only from TEST_USERNAME / TEST_PASSWORD. Never write them, ZEPHYR_TOKEN, or any secret to a file.
+- Credentials come only from TEST_USERNAME / TEST_PASSWORD (Asenso tests: ASENSO_USERNAME / ASENSO_PASSWORD). Never write them, ZEPHYR_TOKEN, or any secret to a file.
 - Avoid `mobile: shell` (the Appium server has no adb_shell). No `time.sleep`; use MobileActions waits.
 - A one-off failure from emulator network loss or an app crash: rerun before changing code.
 
 ## Recipes
 - New page: subclass BasePage, keep locators as class constants, delegate to actions, return the next page.
-- New device test: put it in tests/device/, set `pytestmark = [device]` (+ `risky` if it moves money or
+- tests/Android/Consumer Account with Asenso/ mirrors Upgraded Consumer Account as test_asenso_*.py (Zephyr cases are derived in zephyr_cases.py); keep both in sync.
+- tests/Android/Asenso Account/ covers the Asenso service (pages/asenso_page.py, test_asenso_account_*.py); its cases are defined explicitly in zephyr_cases.py.
+- New device test: put it in tests/Android/Upgraded Consumer Account/ (the folder name has spaces: quote the path in commands), set `pytestmark = [device]` (+ `risky` if it moves money or
   sends bad logins), add `@pytest.mark.zephyr(...)` if a case exists, reuse `helpers.log_in_to_home`, load
   data with a module-scoped TestDataLoader fixture.
 - New config key: add it to default.properties, override per env/device only when it differs.

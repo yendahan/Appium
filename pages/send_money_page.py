@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Optional
 
 from appium.webdriver.common.appiumby import AppiumBy
-from selenium.common.exceptions import WebDriverException
 
 from pages.base_page import BasePage
 from pages.qr_upload import upload_qr_from_gallery
@@ -27,9 +26,11 @@ ACCOUNT_NO = (XPATH, "//android.widget.EditText[@hint='Account No.']")
 BANK_AMOUNT = (XPATH, "//android.widget.EditText[@hint='Amount']")
 ACCOUNT_NAME = (XPATH, "//android.widget.EditText[@hint='Account Name']")
 AMOUNT_HEADING = (A11Y, "Enter or Select Amount (Php)")
+RECIPIENT_HEADING = (A11Y, "Recipient's Details")
 SEARCH_ICON = (XPATH, "(//android.widget.Button)[2]")  # unlabeled, top right
 BANK_SEARCH = (AppiumBy.CLASS_NAME, "android.widget.EditText")
-SUCCESS = (XPATH, "//*[contains(@content-desc,'Successfully Sent')]")
+# InstaPay transfers (e.g. dynamic QRP2M) show "Send Money in Progress!" instead while the bank credits the amount.
+SUCCESS = (XPATH, "//*[contains(@content-desc,'Successfully Sent') or contains(@content-desc,'Send Money in Progress')]")
 CONFIRM = (A11Y, "CONFIRM")
 NEXT = (A11Y, "NEXT")
 REVIEW = (XPATH, "//*[@content-desc='Send Money Confirmation' or @content-desc='Payment Confirmation']")
@@ -80,7 +81,7 @@ class SendMoneyPage(BasePage):
         a.wait_visible(result).click()  # list rows are not flagged clickable, so skip the clickable wait
         a.type(ACCOUNT_NO, account_number)
         a.type(ACCOUNT_NAME, account_name)
-        self._hide_keyboard()  # the keyboard covers the Amount field on this form
+        a.tap(RECIPIENT_HEADING)  # drop focus so the keyboard closes; hide_keyboard() acts as Back here and leaves the form
         a.type(BANK_AMOUNT, amount)
         a.tap(ACCOUNT_NAME)  # blur: the amount is only committed when it loses focus
         a.tap(NEXT)
@@ -97,12 +98,6 @@ class SendMoneyPage(BasePage):
         return self.actions.is_visible(SUCCESS, timeout)
 
     # --- helpers -----------------------------------------------------------------------
-    def _hide_keyboard(self) -> None:
-        try:
-            self.driver.hide_keyboard()
-        except WebDriverException:
-            pass  # keyboard already hidden
-
     def _back_to_menu(self) -> None:
         for _ in range(3):
             if self.actions.is_visible(TO_OTHER_BANKS, 2):

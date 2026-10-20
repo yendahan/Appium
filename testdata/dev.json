@@ -16,11 +16,25 @@
     "username": "${env:TEST_USERNAME}",
     "password": "${env:TEST_PASSWORD}"
   },
+  "asensoCredentials": {
+    "username": "${env:ASENSO_USERNAME}",
+    "password": "${env:ASENSO_PASSWORD}"
+  },
   "invalidLogin": {
     "username": "9000000000",
     "password": "Wrong@Pass123"
   },
   "boundary": {
     "elevenDigitMobile": "09123456789"
+  },
+  "registration": {
+    "nickname": "Yen",
+    "avatarFile": "avatar.jpg"
+  },
+  "payBills": {
+    "biller": "Manila Water",
+    "accountNumber": "12358959",
+    "nickname": "Yen",
+    "amount": "30"
   }
 }

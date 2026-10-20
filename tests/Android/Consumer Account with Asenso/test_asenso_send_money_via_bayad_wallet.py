@@ -7,13 +7,13 @@ import pytest
 
 from framework.test_data_loader import TestDataLoader
 from pages.send_money_page import SendMoneyPage
-from tests.device.helpers import log_in_to_home
+from tests.Android.helpers import ASENSO, log_in_to_home
 
 pytestmark = [pytest.mark.device, pytest.mark.risky]
 
-REVIEW_TIMEOUT = 20
-COMPLETE_TIMEOUT = 30
-ROOT = Path(__file__).resolve().parents[2]
+REVIEW_TIMEOUT = 60
+COMPLETE_TIMEOUT = 90  # InstaPay transfers take 45s+
+ROOT = Path(__file__).resolve().parents[3]
 DATA = TestDataLoader.for_current_env()
 
 QR_CASES = [
@@ -26,7 +26,7 @@ QR_CASES = [
 
 @pytest.fixture
 def send_money(driver) -> SendMoneyPage:
-    log_in_to_home(driver, DATA)
+    log_in_to_home(driver, DATA, ASENSO)
     return SendMoneyPage(driver).open_from_wallet()
 
 
@@ -34,9 +34,10 @@ def complete_transaction(page: SendMoneyPage, receipt_name: str) -> None:
     page.confirm()
     sent = page.is_receipt_displayed(COMPLETE_TIMEOUT)
     page.actions.screenshot(receipt_name, "RECEIPT")
-    assert sent, "Receipt should show 'Successfully Sent!' after CONFIRM"
+    assert sent, "Receipt should show 'Successfully Sent!' (or 'Send Money in Progress!') after CONFIRM"
 
 
+@pytest.mark.zephyr
 @pytest.mark.parametrize("qr_type,key", QR_CASES, ids=[c[0] for c in QR_CASES])
 def test_wallet_via_qr_valid(send_money, qr_type, key):
     """Positive: Via QR accepts a valid QR code."""
@@ -46,14 +47,16 @@ def test_wallet_via_qr_valid(send_money, qr_type, key):
     complete_transaction(send_money, f"wallet-viaQr-{qr_type}")
 
 
+@pytest.mark.zephyr
 def test_wallet_to_bayad_wallet_valid(send_money):
     """Positive: To Bayad Wallet accepts a valid registered number."""
     send = DATA.node("sendMoney")
-    send_money.to_bayad_wallet(send["bayadWalletNumber"], send["amount"])
+    send_money.to_bayad_wallet(send["bayadWalletNumber"]["upgraded"], send["amount"])
     assert send_money.is_review_displayed(REVIEW_TIMEOUT), "Valid wallet number should reach the review step"
     complete_transaction(send_money, "wallet-toBayadWallet")
 
 
+@pytest.mark.zephyr
 def test_wallet_to_other_bank_valid(send_money):
     """Positive: To Other Banks and E-Wallets accepts a valid Philippine National Bank account."""
     send = DATA.node("sendMoney")

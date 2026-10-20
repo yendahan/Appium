@@ -20,8 +20,8 @@ TRY_AGAIN = (AppiumBy.ACCESSIBILITY_ID, "TRY AGAIN")
 class LoginPage(BasePage):
     INVALID_CREDENTIALS_MESSAGE = INVALID_CREDENTIALS_MESSAGE
 
-    def is_displayed(self) -> bool:
-        return self.actions.is_visible(TITLE)
+    def is_displayed(self, timeout: Optional[float] = None) -> bool:
+        return self.actions.is_visible(TITLE, timeout)
 
     def enter_mobile(self, mobile: str) -> "LoginPage":
         self.actions.type(MOBILE, mobile)

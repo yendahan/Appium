@@ -7,13 +7,13 @@ import pytest
 
 from framework.test_data_loader import TestDataLoader
 from pages.pay_via_qr_page import PayViaQrPage
-from tests.device.helpers import log_in_to_home
+from tests.Android.helpers import log_in_to_home
 
 pytestmark = [pytest.mark.device, pytest.mark.risky]
 
-REVIEW_TIMEOUT = 20
-COMPLETE_TIMEOUT = 30
-ROOT = Path(__file__).resolve().parents[2]
+REVIEW_TIMEOUT = 60
+COMPLETE_TIMEOUT = 90  # InstaPay transfers take 45s+
+ROOT = Path(__file__).resolve().parents[3]
 DATA = TestDataLoader.for_current_env()
 
 QR_CASES = [
@@ -30,6 +30,7 @@ def pay_via_qr(driver) -> PayViaQrPage:
     return PayViaQrPage(driver).open()
 
 
+@pytest.mark.zephyr
 @pytest.mark.parametrize("qr_type,key", QR_CASES, ids=[c[0] for c in QR_CASES])
 def test_pay_via_qr_valid(pay_via_qr, qr_type, key):
     """Positive: Pay via QR accepts a valid QR code scanned from the gallery."""
@@ -39,4 +40,4 @@ def test_pay_via_qr_valid(pay_via_qr, qr_type, key):
     pay_via_qr.confirm()
     paid = pay_via_qr.is_receipt_displayed(COMPLETE_TIMEOUT)
     pay_via_qr.actions.screenshot(f"payViaQr-{qr_type}", "RECEIPT")
-    assert paid, "Receipt should show 'Successfully Sent!' after CONFIRM"
+    assert paid, "Receipt should show 'Successfully Sent!' (or 'Send Money in Progress!') after CONFIRM"

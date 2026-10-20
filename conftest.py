@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import pytest
 
-from framework import driver_factory, zephyr_reporter
+from framework import driver_factory, mobile_actions, zephyr_cases, zephyr_reporter
 from framework.config_manager import ConfigManager
 from framework.mobile_actions import MobileActions
 
@@ -31,6 +31,24 @@ def pytest_configure(config: pytest.Config) -> None:
             raise pytest.UsageError(f"--cfg expects KEY=VALUE but got '{item}'")
         overrides[key.strip()] = value
     ConfigManager.configure(config.getoption("--env"), config.getoption("--device"), overrides)
+
+
+def pytest_collection_finish(session: pytest.Session) -> None:
+    """Checks the Zephyr setup once the final test selection is known, before any test runs."""
+    if not any(item.get_closest_marker("zephyr") for item in session.items):
+        return
+    try:
+        zephyr_reporter.start_run()
+    except zephyr_reporter.ZephyrSetupError as e:
+        pytest.exit(f"Zephyr setup error, no test was run: {e}", returncode=2)
+
+
+@pytest.fixture(autouse=True)
+def _screenshot_folder(request: pytest.FixtureRequest):
+    """Screenshots of a test go in the folders its file sits in under tests/ (like its Zephyr folder)."""
+    mobile_actions.set_screenshot_subfolder(zephyr_cases.folder_of(request.node.nodeid))
+    yield
+    mobile_actions.set_screenshot_subfolder("")
 
 
 @pytest.fixture
@@ -88,8 +106,11 @@ def _safe(name: str) -> str:
 
 def _publish_to_zephyr(item: pytest.Item, report: pytest.TestReport, call: pytest.CallInfo,
                        screenshot: Optional[Path]) -> None:
-    marker = item.get_closest_marker("zephyr")
-    if marker is None or not marker.args:
+    if item.get_closest_marker("zephyr") is None:
+        return
+    case_key = zephyr_reporter.resolve(item.nodeid)
+    if case_key is None:
+        LOG.warning("Zephyr: no case found for %s in this run's folder, result not reported", item.nodeid)
         return
     if report.passed:
         status, error = "Pass", None
@@ -98,4 +119,12 @@ def _publish_to_zephyr(item: pytest.Item, report: pytest.TestReport, call: pytes
     else:
         status = "Fail"
         error = repr(call.excinfo.value) if call.excinfo else "setup failed"
-    zephyr_reporter.publish(marker.args[0], status, error, screenshot)
+    zephyr_reporter.publish(case_key, status, error, screenshot)
+
+
+def pytest_terminal_summary(terminalreporter) -> None:
+    """After the run: what was created in Zephyr and where the results went."""
+    line = zephyr_reporter.summary()
+    if line:
+        terminalreporter.write_sep("-", "Zephyr")
+        terminalreporter.write_line(line)

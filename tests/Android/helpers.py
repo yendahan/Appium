@@ -4,12 +4,13 @@ from framework.test_data_loader import TestDataLoader
 from pages.biometric_setup_page import BiometricSetupPage
 from pages.privacy_notice_page import PrivacyNoticePage
 
-LOGIN_TIMEOUT = 20
+ASENSO = "asensoCredentials"  # testdata node for the Asenso account tests
+LOGIN_TIMEOUT = 60  # login + biometric screen can take 20s+ on a slow emulator
 
 
-def log_in_to_home(driver, data: TestDataLoader) -> None:
+def log_in_to_home(driver, data: TestDataLoader, credentials_key: str = "credentials") -> None:
     login = PrivacyNoticePage(driver).accept_and_continue().go_to_login()
-    creds = data.node("credentials")
+    creds = data.node(credentials_key)
     login.login_as(creds["username"], creds["password"])
     biometric: BiometricSetupPage = login.expect_biometric_setup()
     assert biometric.is_displayed(LOGIN_TIMEOUT), "Biometric setup is offered after first login"

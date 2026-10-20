@@ -16,6 +16,10 @@
     "username": "${env:TEST_USERNAME}",
     "password": "${env:TEST_PASSWORD}"
   },
+  "asensoCredentials": {
+    "username": "${env:ASENSO_USERNAME}",
+    "password": "${env:ASENSO_PASSWORD}"
+  },
   "invalidLogin": {
     "username": "9000000000",
     "password": "Wrong@Pass123"
@@ -25,11 +29,15 @@
   },
   "sendMoney": {
     "amount": "10",
-    "bayadWalletNumber": "9688528895",
+    "bayadWalletNumber": {
+      "upgraded": "9764912641",
+      "asenso": "9688528895",
+      "basic": "9219299452"
+    },
     "otherBank": {
       "accountNumber": "111171201825",
       "accountName": "Test Recipient",
-    "bankName": "Philippine National Bank"
+      "bankName": "Philippine National Bank"
     },
     "qr": {
       "p2pStatic": "testdata/qr/qrp2p-static.png",
@@ -37,5 +45,23 @@
       "p2mStatic": "testdata/qr/qrp2m-static.png",
       "p2mDynamic": "testdata/qr/qrp2m-dynamic.png"
     }
+  },
+  "registration": {
+    "nickname": "Yen",
+    "avatarFile": "avatar.jpg"
+  },
+  "asensoAccount": {
+    "addMoney": {
+      "amount": "300"
+    },
+    "withdraw": {
+      "amount": "300"
+    }
+  },
+  "payBills": {
+    "biller": "Manila Water",
+    "accountNumber": "12358959",
+    "nickname": "Yen",
+    "amount": "30"
   }
 }
