@@ -152,6 +152,22 @@ CASES: Dict[str, Case] = {
 }
 
 
+# --- Upgraded Consumer Account: Wallet transactions (copied for Asenso below) ---------------------------------------------
+WALLET_ACTIVITY = LOGIN + [("Tap the Wallet tab and tap See all", "The Transaction History and Ongoing Activities tabs are displayed")]
+CASES.update({
+    "test_wallet_transactions.py::test_wallet_transaction_history": Case(
+        "Wallet: Transaction History is shown from See all",
+        "Positive: Wallet > See all opens Activity; Transaction History shows its list or the empty message.",
+        WALLET_ACTIVITY + [("Open Transaction History and take a screenshot",
+                            "The history list or the empty message is displayed")]),
+    "test_wallet_transactions.py::test_wallet_ongoing_activities": Case(
+        "Wallet: Ongoing Activities is shown from See all",
+        "Positive: Wallet > See all opens Activity; Ongoing Activities shows its list or the empty message.",
+        WALLET_ACTIVITY + [("Open Ongoing Activities and take a screenshot",
+                            "The activities list or the empty message is displayed")]),
+})
+
+
 # The same cases for the "Consumer Account with Asenso" test files (test_asenso_*.py); names are prefixed so they stay unique.
 CASES.update({
     key.replace("test_", "test_asenso_", 1): Case(f"Asenso {case.name}", case.objective, case.steps)

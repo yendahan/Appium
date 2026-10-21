@@ -119,6 +119,10 @@ pytest -m "device and not risky" --env qa --device emulator "tests/Android/Asens
 pytest -m device --env qa --device emulator "tests/Android/Upgraded Consumer Account/test_pay_bills.py"
 ```
 
+### Wallet transactions tests
+
+`test_wallet_transactions.py` (Upgraded) and `test_asenso_wallet_transactions.py` (Asenso) are safe `device` tests (no payments): Wallet tab (accessibility id `Wallet\nTab 3 of 4`) > See all opens Activity, then one test each shows Transaction History and Ongoing Activities (list or empty message) and saves a screenshot. Page object: `pages/activity_page.py` (`open_from_wallet`).
+
 ### Basic Account tests
 
 `tests/Android/Basic Account/` (`test_basic_account_*.py`) uses the Basic account (`BASIC_USERNAME` / `BASIC_PASSWORD`, never stored):
