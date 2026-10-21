@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Dict, Optional
 
@@ -10,6 +11,8 @@ import pytest
 from framework import driver_factory, mobile_actions, zephyr_cases, zephyr_reporter
 from framework.config_manager import ConfigManager
 from framework.mobile_actions import MobileActions
+from framework.shared_session import SharedSession
+from pages.home_page import HomePage
 
 LOG = logging.getLogger("conftest")
 SCREENSHOT_KEY = "screenshot_path"
@@ -19,6 +22,8 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     group = parser.getgroup("appium")
     group.addoption("--env", default=None, help="environment profile (default: qa; env var ENV)")
     group.addoption("--device", default=None, help="device profile (default: emulator; env var DEVICE)")
+    group.addoption("--reuse-app", action="store_true", default=os.environ.get("REUSE_APP", "").lower() == "true",
+                    help="tests marked shared_session keep one logged-in app session instead of a fresh one each")
     group.addoption("--cfg", action="append", default=[], metavar="KEY=VALUE",
                     help="override any config key, e.g. --cfg appium.url=http://10.0.0.5:4723")
 
@@ -51,10 +56,29 @@ def _screenshot_folder(request: pytest.FixtureRequest):
     mobile_actions.set_screenshot_subfolder("")
 
 
+SHARED = SharedSession(lambda: driver_factory.create(ConfigManager.get_instance()),
+                       lambda drv: HomePage(drv).return_to_home())
+
+
+def pytest_sessionfinish(session: pytest.Session) -> None:
+    SHARED.discard()
+
+
 @pytest.fixture
 def driver(request: pytest.FixtureRequest):
-    """A fresh Appium session per test (same as the Java BaseTest @BeforeMethod/@AfterMethod)."""
+    """A fresh Appium session per test (same as the Java BaseTest @BeforeMethod/@AfterMethod).
+
+    With --reuse-app, a test marked shared_session reuses the open session of its account instead."""
     LOG.info("=== START %s ===", request.node.nodeid)
+    shared = request.node.get_closest_marker("shared_session")
+    if shared and request.config.getoption("--reuse-app"):
+        drv = SHARED.acquire(shared.args[0])
+        drv.reused_session = True
+        yield drv
+        LOG.info("=== END %s ===", request.node.nodeid)
+        if getattr(request.node, "failed_phase", False):
+            SHARED.discard()  # a failure can leave any screen open: the next test starts fresh
+        return
     drv = driver_factory.create(ConfigManager.get_instance())
     yield drv
     LOG.info("=== END %s ===", request.node.nodeid)
@@ -68,6 +92,8 @@ def driver(request: pytest.FixtureRequest):
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
     outcome = yield
     report = outcome.get_result()
+    if report.failed:
+        item.failed_phase = True
     if report.when == "call" or (report.when == "setup" and not report.passed):
         drv = item.funcargs.get("driver") if hasattr(item, "funcargs") else None
         screenshot: Optional[Path] = None

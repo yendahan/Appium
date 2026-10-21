@@ -6,6 +6,7 @@ Python 3.9+, pytest, Appium-Python-Client, Page Object Model. Ported from the Ja
 - `pytest` runs only the device-free `unit` tests (default, `-m unit` in pytest.ini).
 - `pytest -m device --env qa --device emulator` runs device tests; needs Appium on :4723 and an emulator.
 - `pytest -m "device and not risky"` runs only the safe device tests (app launch).
+- Add `--reuse-app` to let the browse-only tests marked `shared_session` (wallet/Asenso/Basic transactions, account management, Basic add-money previews) share one logged-in app session per account; everything else keeps a fresh app per test. A failed test or an account switch closes the shared session.
 - Add `-k test_name` or a file path for a single test. `--cfg key=value` overrides any config key.
 - Credentials come only from env vars `TEST_USERNAME` and `TEST_PASSWORD`. The Asenso tests use `ASENSO_USERNAME` and `ASENSO_PASSWORD` (testdata node `asensoCredentials`). Never write them to a file.
 - Zephyr reporting is optional: with `ZEPHYR_TOKEN` set you must also set `ZEPHYR_CYCLE_NAME` and `ZEPHYR_CASES_FOLDER` (else the run stops). A run creates a new cycle, creates the folder if missing and the cases it lacks (`framework/zephyr_cases.py`); tests report to cases by name.

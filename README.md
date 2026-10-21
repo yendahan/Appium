@@ -119,6 +119,14 @@ pytest -m "device and not risky" --env qa --device emulator "tests/Android/Asens
 pytest -m device --env qa --device emulator "tests/Android/Upgraded Consumer Account/test_pay_bills.py"
 ```
 
+### Reusing the app (`--reuse-app`)
+
+By default every test gets a fresh Appium session with the app reset and logs in again (20s or more). With `--reuse-app` (or env `REUSE_APP=true`), tests marked `@pytest.mark.shared_session("<credentials node>")` keep one logged-in session per account: before each one the app is brought back to Home (`HomePage.return_to_home`) and `log_in_to_home` skips the login. These are the browse-only tests: wallet transactions (Upgraded and Asenso), Asenso my transactions and account management, Basic transactions and the Basic add-money previews. Launch, login, registration and every payment test keep a fresh app. A failed test, a switch to another account, or a session that cannot get back to Home closes the shared session so the next test starts clean. The code is `framework/shared_session.py` and the `driver` fixture in `conftest.py`.
+
+```bash
+pytest -m device --env qa --device physical --reuse-app "tests/Android/Asenso Account"
+```
+
 ### Wallet transactions tests
 
 `test_wallet_transactions.py` (Upgraded) and `test_asenso_wallet_transactions.py` (Asenso) are safe `device` tests (no payments): Wallet tab (accessibility id `Wallet\nTab 3 of 4`) > See all opens Activity, then one test each shows Transaction History and Ongoing Activities (list or empty message) and saves a screenshot. Page object: `pages/activity_page.py` (`open_from_wallet`).

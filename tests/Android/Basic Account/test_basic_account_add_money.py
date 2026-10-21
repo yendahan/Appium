@@ -4,7 +4,7 @@ from framework.test_data_loader import TestDataLoader
 from pages.add_money_page import AddMoneyPage
 from tests.Android.helpers import BASIC, log_in_to_home
 
-pytestmark = pytest.mark.device
+pytestmark = [pytest.mark.device, pytest.mark.shared_session(BASIC)]
 
 CONFIRMATION_TIMEOUT = 60
 ERROR_TIMEOUT = 10

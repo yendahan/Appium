@@ -4,7 +4,7 @@ from framework.test_data_loader import TestDataLoader
 from pages.asenso_page import AsensoPage
 from tests.Android.helpers import ASENSO, log_in_to_home
 
-pytestmark = pytest.mark.device
+pytestmark = [pytest.mark.device, pytest.mark.shared_session(ASENSO)]
 
 HISTORY_TIMEOUT = 30
 DATA = TestDataLoader.for_current_env()

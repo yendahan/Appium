@@ -4,7 +4,7 @@ from framework.test_data_loader import TestDataLoader
 from pages.activity_page import ActivityPage
 from tests.Android.helpers import log_in_to_home
 
-pytestmark = pytest.mark.device
+pytestmark = [pytest.mark.device, pytest.mark.shared_session("credentials")]
 
 SCREEN_TIMEOUT = 30
 DATA = TestDataLoader.for_current_env()
