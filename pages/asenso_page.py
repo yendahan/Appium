@@ -37,6 +37,15 @@ WITHDRAW_ROW_X, WITHDRAW_ROW_Y = 0.5, 0.47  # "To My Bayad Wallet" row
 
 ACCOUNT_MANAGEMENT = (A11Y, "Account Management")
 GENERAL_SETTINGS = (A11Y, "General Settings")
+# Account Management links: an element that only exists once the screen's content has loaded (its heading shows first).
+LINK_CONTENT = {
+    "InstaPay Settings": (XPATH, "//*[contains(@content-desc,'Balance: Php')]"),  # the wallet options, after a spinner
+    "Input Distributor Code": (XPATH, "//android.widget.EditText[@hint='Distributor Code']"),
+    "Upload Business Permit": (XPATH, "//android.widget.EditText[@hint='Business Permit Number']"),
+    "Terms and Conditions": (XPATH, "//*[contains(@text,'Welcome to Bayad by CIS Bayad Center')]"),  # web page body
+    "Data Privacy": (XPATH, "//*[@text='BAYAD AND DATA PRIVACY']"),  # web page body
+    "User Manual": (XPATH, "//android.widget.ImageView"),  # the manual's page image, after a blank web view
+}
 YES_GO_BACK = (A11Y, "YES, GO BACK")  # the "Go back?" dialog that forms (e.g. Input Distributor Code) ask first
 
 HOME_TIMEOUT = 60  # service tiles and the Asenso screen load slowly
@@ -130,6 +139,10 @@ class AsensoPage(BasePage):
 
     def is_heading_displayed(self, heading: str, timeout: Optional[float] = None) -> bool:
         return self.actions.is_visible((A11Y, heading), timeout)
+
+    def is_link_content_displayed(self, link: str, timeout: Optional[float] = None) -> bool:
+        """The link's screen has finished loading (its heading shows before its content)."""
+        return self.actions.is_visible(LINK_CONTENT[link], timeout)
 
     def back_to_account_management(self) -> bool:
         """Back from a link's screen; more than one Back is needed when the first only closes the keyboard."""

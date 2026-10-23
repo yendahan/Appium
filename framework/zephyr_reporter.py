@@ -34,6 +34,7 @@ _case_keys_by_name: Dict[str, str] = {}
 # What this run set up and published, for the end-of-run summary.
 _info: Dict[str, object] = {}
 _results: Counter = Counter()
+_unpublished: List[str] = []  # case keys whose result could not be sent
 
 
 def escape_html(text: str) -> str:
@@ -61,7 +62,8 @@ def publish(case_key: str, status: str, error: Optional[str], screenshot: Option
         except Exception as e:  # noqa: BLE001
             LOG.warning("Zephyr: could not update step results for %s: %s", exec_key, e)
     except Exception as e:  # noqa: BLE001
-        LOG.warning("Zephyr: could not publish %s: %s", case_key, e)
+        _unpublished.append(case_key)
+        LOG.error("Zephyr: could not publish %s as %s: %s", case_key, status, e)
 
 
 def step_results(expected: List[str], status: str, error: Optional[str], note: Optional[str]) -> List[Dict[str, str]]:
@@ -241,7 +243,8 @@ def summary() -> Optional[str]:
              f"{_info['cases']} cases: {_info['cases_moved']} moved in from existing, {_info['cases_created']} created" \
              f"{_tidy_text()})"
     results = ", ".join(f"{n} {status}" for status, n in sorted(_results.items())) or "no results"
-    return f"Zephyr: {folder} | cycle {_info['cycle_key']} '{_info['cycle_name']}' | results: {results}"
+    lost = f" | not published: {', '.join(_unpublished)}" if _unpublished else ""
+    return f"Zephyr: {folder} | cycle {_info['cycle_key']} '{_info['cycle_name']}' | results: {results}{lost}"
 
 
 def start_run(client: Optional[ZephyrClient] = None, now: Optional[datetime] = None) -> None:

@@ -28,6 +28,8 @@ RECEIPT = (A11Y, "Payment Successful!")
 # so they are tapped by position: 94% across / 8.5% down, and 45% across / 16.5% down.
 SEARCH_ICON_X, SEARCH_ICON_Y = 0.942, 0.085
 FIRST_RESULT_X, FIRST_RESULT_Y = 0.45, 0.165
+# The magnifier inside the search field (once opened) submits the typed search: 89% across / 10.7% down.
+SUBMIT_SEARCH_X, SUBMIT_SEARCH_Y = 0.892, 0.107
 
 BILLERS_TIMEOUT = 60
 FORM_TIMEOUT = 60
@@ -59,17 +61,23 @@ class PayBillsPage(BasePage):
         if self.actions.is_visible(SERVER_ERROR, 1):
             raise AssertionError("Pay Bills showed 'Internal server error'")
 
-    def pay(self, biller: str, account_number: str, nickname: str, amount: str) -> "PayBillsPage":
-        """Searches `biller`, opens it, fills the biller form and taps NEXT."""
+    def pay(self, biller: str, account_number: str, nickname: str, amount: str, tap_search: bool = False) -> "PayBillsPage":
+        """Searches `biller` (`tap_search` taps the magnifier in the search field after typing), opens it, fills the biller form and taps NEXT."""
         a = self.actions
         a.tap_at(SEARCH_ICON_X, SEARCH_ICON_Y)
         a.type(SEARCH_FIELD, biller)
+        if tap_search:
+            a.tap_at(SUBMIT_SEARCH_X, SUBMIT_SEARCH_Y)
         if not a.is_visible(_biller_row(biller)):
             self.fail_on_server_error()
             a.wait_visible(_biller_row(biller), 1)  # raises with the usual "not visible" message
-        a.tap_at(FIRST_RESULT_X, FIRST_RESULT_Y)
-        a.wait_visible(NICKNAME, FORM_TIMEOUT)  # the form shows a loading skeleton first
-        a.type(NICKNAME, nickname)
+        if tap_search:
+            a.tap_present(_biller_row(biller))  # a submitted search lists MERALCO first, so the first row is wrong
+        else:
+            a.tap_at(FIRST_RESULT_X, FIRST_RESULT_Y)
+        a.wait_visible(ACCOUNT_NUMBER, FORM_TIMEOUT)  # the form shows a loading skeleton first
+        if a.is_visible(NICKNAME, 3):  # the Asenso form has no nickname field
+            a.type(NICKNAME, nickname)
         a.type(ACCOUNT_NUMBER, account_number)
         a.type(AMOUNT, amount)
         a.tap(FORM_HEADING)  # blur: the amount is only committed (and NEXT enabled) when it loses focus

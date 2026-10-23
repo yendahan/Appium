@@ -34,7 +34,9 @@ def complete_transaction(page: SendMoneyPage, receipt_name: str) -> None:
     page.confirm()
     sent = page.is_receipt_displayed(COMPLETE_TIMEOUT)
     page.actions.screenshot(receipt_name, "RECEIPT")
-    assert sent, "Receipt should show 'Successfully Sent!' (or 'Send Money in Progress!') after CONFIRM"
+    assert not (not sent and page.is_in_progress_displayed()), \
+        "Receipt shows 'Send Money in Progress!' instead of 'Successfully Sent!'"
+    assert sent, "Receipt should show 'Successfully Sent!' after CONFIRM"
 
 
 @pytest.mark.zephyr

@@ -97,8 +97,8 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
     if report.when == "call" or (report.when == "setup" and not report.passed):
         drv = item.funcargs.get("driver") if hasattr(item, "funcargs") else None
         screenshot: Optional[Path] = None
-        if drv is not None and report.when == "call":
-            screenshot = _capture(item, drv, report.passed)
+        if drv is not None and (report.when == "call" or report.failed):
+            screenshot = _capture(item, drv, report.passed)  # a failed login in a fixture is a setup failure
         _publish_to_zephyr(item, report, call, screenshot)
 
 

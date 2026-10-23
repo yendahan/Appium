@@ -29,8 +29,10 @@ AMOUNT_HEADING = (A11Y, "Enter or Select Amount (Php)")
 RECIPIENT_HEADING = (A11Y, "Recipient's Details")
 SEARCH_ICON = (XPATH, "(//android.widget.Button)[2]")  # unlabeled, top right
 BANK_SEARCH = (AppiumBy.CLASS_NAME, "android.widget.EditText")
-# InstaPay transfers (e.g. dynamic QRP2M) show "Send Money in Progress!" instead while the bank credits the amount.
-SUCCESS = (XPATH, "//*[contains(@content-desc,'Successfully Sent') or contains(@content-desc,'Send Money in Progress')]")
+# InstaPay transfers (e.g. dynamic QRP2M) show "Send Money in Progress!" while the bank credits the amount; that is not a pass.
+SUCCESS = (XPATH, "//*[contains(@content-desc,'Successfully Sent')]")
+IN_PROGRESS = (XPATH, "//*[contains(@content-desc,'Send Money in Progress')]")
+ANY_RECEIPT = (XPATH, "//*[contains(@content-desc,'Successfully Sent') or contains(@content-desc,'Send Money in Progress')]")
 CONFIRM = (A11Y, "CONFIRM")
 NEXT = (A11Y, "NEXT")
 REVIEW = (XPATH, "//*[@content-desc='Send Money Confirmation' or @content-desc='Payment Confirmation']")
@@ -96,7 +98,13 @@ class SendMoneyPage(BasePage):
         return self.actions.is_visible(REVIEW, timeout)
 
     def is_receipt_displayed(self, timeout: Optional[float] = None) -> bool:
-        return self.actions.is_visible(SUCCESS, timeout)
+        """True only for the final "Successfully Sent!" receipt; "in progress" is not a success."""
+        if not self.actions.is_visible(ANY_RECEIPT, timeout):
+            return False
+        return self.actions.is_visible(SUCCESS, 2)
+
+    def is_in_progress_displayed(self) -> bool:
+        return self.actions.is_visible(IN_PROGRESS, 2)
 
     # --- helpers -----------------------------------------------------------------------
     def _back_to_menu(self) -> None:

@@ -28,7 +28,7 @@ LAUNCH = [("Launch the app", "The app opens"),
           ("Check the landing element configured for the app", "The landing element is visible")]
 QR_TYPES = "QRP2P static and dynamic, QRP2M static and dynamic"
 REVIEW = "The Payment Confirmation review step is displayed"
-SENT = ("Tap CONFIRM", "The receipt shows 'Successfully Sent!' (or 'Send Money in Progress!' for an InstaPay transfer)")
+SENT = ("Tap CONFIRM", "The receipt shows 'Successfully Sent!' ('Send Money in Progress!' fails the test)")
 
 CASES: Dict[str, Case] = {
     # --- app launch ---------------------------------------------------------------------------------------------

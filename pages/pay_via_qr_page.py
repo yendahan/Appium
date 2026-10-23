@@ -7,8 +7,8 @@ from appium.webdriver.common.appiumby import AppiumBy
 
 from pages.base_page import BasePage
 from pages.qr_upload import upload_qr_from_gallery
-from pages.send_money_page import (ACCOUNT_NAME, BANK_AMOUNT, CONFIRM, NEXT, REVIEW, SERVICES,
-                                   SUCCESS)
+from pages.send_money_page import (ACCOUNT_NAME, ANY_RECEIPT as SUCCESS, BANK_AMOUNT, CONFIRM, NEXT,
+                                   REVIEW, SERVICES)
 
 PAY_VIA_QR = (AppiumBy.ACCESSIBILITY_ID, "Pay via QR")
 

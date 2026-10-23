@@ -24,7 +24,7 @@ def pay_bills(driver) -> PayBillsPage:
 def test_asenso_pay_bills_manila_water(pay_bills):
     """Positive: Pay Bills from the Asenso screen accepts a valid Manila Water account and shows a receipt."""
     bill = DATA.node("payBills")
-    pay_bills.pay(bill["biller"], bill["accountNumber"], bill["nickname"], bill["amount"])
+    pay_bills.pay(bill["biller"], bill["accountNumber"], bill["nickname"], bill["amount"], tap_search=True)
     assert pay_bills.is_review_displayed(REVIEW_TIMEOUT), "Payment Summary should show after NEXT"
     pay_bills.confirm()
     paid = pay_bills.is_receipt_displayed(COMPLETE_TIMEOUT)

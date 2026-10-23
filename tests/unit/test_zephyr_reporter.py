@@ -120,6 +120,7 @@ def setup(monkeypatch):
     monkeypatch.setattr(zephyr_reporter, "_case_keys_by_name", {})
     monkeypatch.setattr(zephyr_reporter, "_info", {})
     monkeypatch.setattr(zephyr_reporter, "_results", Counter())
+    monkeypatch.setattr(zephyr_reporter, "_unpublished", [])
 
     def configure(name=None, folder=None, key=None):
         overrides = {k: v for k, v in (("zephyr.cycle.name", name), ("zephyr.cases.folder", folder),
@@ -413,6 +414,27 @@ def test_summary_says_what_was_created_and_the_results(setup):
     assert f"{len(zephyr_cases.CASES)} cases: 0 moved in from existing, {len(zephyr_cases.CASES)} created" in line
     assert f"cycle AMW-R900 'Smoke test {STAMP}'" in line
     assert "results: 1 Fail, 2 Pass" in line
+
+
+def test_a_failed_login_in_a_fixture_is_published_as_a_fail(setup):
+    setup(name="Smoke test", folder="Regression")
+    client = FakeClient()
+    zephyr_reporter.start_run(client, NOW)
+    key = zephyr_reporter.resolve(LOGIN_TEST)
+    updates = []
+    client.update_execution = lambda exec_key, status, comment: updates.append((exec_key, status, comment))
+    zephyr_reporter.publish(key, "Fail", "AssertionError('Biometric setup is offered after first login')", None)
+    assert updates == [(f"EXEC-{key}", "Fail", "Actual: AssertionError('Biometric setup is offered after first login')")]
+    assert "results: 1 Fail" in zephyr_reporter.summary()
+
+
+def test_a_result_that_cannot_be_published_is_named_in_the_summary(setup):
+    setup(name="Smoke test", folder="Regression")
+    client = FakeClient()
+    zephyr_reporter.start_run(client, NOW)
+    client.post_execution = lambda *a: (_ for _ in ()).throw(IOError("500"))
+    zephyr_reporter.publish("AMW-T1", "Fail", "boom", None)
+    assert "results: no results | not published: AMW-T1" in zephyr_reporter.summary()
 
 
 def test_no_summary_when_zephyr_was_not_used(setup):
