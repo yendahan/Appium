@@ -54,6 +54,17 @@
     "nickname": "Yen",
     "avatarFile": "avatar.jpg"
   },
+  "upgradeAccount": {
+    "placeOfBirth": "Manila",
+    "nationality": "Filipino",
+    "sourceOfFund": "Salary/Professional Fee",
+    "natureOfWork": "Accountant",
+    "province": "Abra",
+    "city": "Bangued",
+    "street": "123 Test Street",
+    "idType": "VOTER'S ID",
+    "idNumber": "PO-1000001"
+  },
   "basicAccount": {
     "addMoney": {
       "partner": "Bayad Center",

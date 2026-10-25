@@ -101,6 +101,18 @@ CASES: Dict[str, Case] = {
          ("Enter a valid password in both fields and tap SUBMIT", "Customize Profile is displayed"),
          ("Upload an avatar, enter a nickname and tap NEXT",
           "The 'All set' success page with CONTINUE is displayed")]),
+    "test_basic_account_upgrade.py::test_upgrade_account_after_registration": Case(
+        "Basic Account: Upgrade Account: newly registered account submits its upgrade request",
+        "Positive: a freshly registered Basic account completes the Upgrade Account steps and the request is submitted.",
+        [("Log in with the newly registered number and tap Upgrade Now on the dashboard",
+          "Wallet features and limits is displayed"),
+         ("Tap UPGRADE NOW", "Profile Information is displayed"),
+         ("Tap Next, then enter the place of birth and pick nationality, source of fund and nature of work",
+          "Address Information is displayed"),
+         ("Pick a province and city, enter a street and tap Next", "Identity Verification is displayed"),
+         ("Pick the ID type, enter the ID number and tap Next", "The ID photo steps are displayed"),
+         ("Take the front and back ID photos, a selfie and a video, submitting each", "Review Details is displayed"),
+         ("Tap Submit", "'Application Submitted!' is displayed")]),
     # --- pay bills ----------------------------------------------------------------------------------------------
     "test_pay_bills.py::test_pay_bills_manila_water": Case(
         "Pay Bills: Manila Water payment shows a receipt",

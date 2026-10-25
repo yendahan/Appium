@@ -51,7 +51,7 @@ def test_all_cases_are_grouped_under_the_project_folders():
     assert set(grouped) == {upgraded, asenso, account, basic}
     assert len(grouped[upgraded]) == len(grouped[asenso])
     assert len(grouped[account]) == 5
-    assert len(grouped[basic]) == 7  # 3 registration + add money (2), pay bills, transactions
+    assert len(grouped[basic]) == 8  # 3 registration + upgrade, add money (2), pay bills, transactions
     assert sum(len(v) for v in grouped.values()) == len(CASES)
 
 

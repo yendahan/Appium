@@ -19,10 +19,10 @@ NICKNAME = (XPATH, "//android.widget.EditText[@hint='Preferred Biller Nickname']
 ACCOUNT_NUMBER = (XPATH, "//android.widget.EditText[@hint='Account Number']")
 AMOUNT = (XPATH, "//android.widget.EditText[@hint='Amount']")
 SERVER_ERROR = (A11Y, "Internal server error")  # the app's error popup when the billers or a search fail
-FORM_HEADING = (A11Y, "Enter Biller Information")
 NEXT = (A11Y, "NEXT")
 CONFIRM = (A11Y, "CONFIRM")
-RECEIPT = (A11Y, "Payment Successful!")
+# A merchant (Asenso) account gets the "Customer E-Receipt" dialog over the receipt instead of the plain success screen.
+RECEIPT = (XPATH, "//*[@content-desc='Payment Successful!' or @content-desc='Customer E-Receipt']")
 
 # The search icon (top right) and the first result row are not flagged clickable and expose no usable element,
 # so they are tapped by position: 94% across / 8.5% down, and 45% across / 16.5% down.
@@ -80,7 +80,7 @@ class PayBillsPage(BasePage):
             a.type(NICKNAME, nickname)
         a.type(ACCOUNT_NUMBER, account_number)
         a.type(AMOUNT, amount)
-        a.tap(FORM_HEADING)  # blur: the amount is only committed (and NEXT enabled) when it loses focus
+        a.press_enter()  # Done key: the amount is only committed (and NEXT shown) when it loses focus; tapping the heading no longer blurs it
         a.tap(NEXT)
         return self
 

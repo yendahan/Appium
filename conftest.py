@@ -38,6 +38,12 @@ def pytest_configure(config: pytest.Config) -> None:
     ConfigManager.configure(config.getoption("--env"), config.getoption("--device"), overrides)
 
 
+def pytest_collection_modifyitems(items: list) -> None:
+    """Runs the transaction history / ongoing activity tests last, so earlier payments show up in their screenshots."""
+    last = [i for i in items if i.path.name.endswith("_transactions.py")]
+    items[:] = [i for i in items if i not in last] + last
+
+
 def pytest_collection_finish(session: pytest.Session) -> None:
     """Checks the Zephyr setup once the final test selection is known, before any test runs."""
     if not any(item.get_closest_marker("zephyr") for item in session.items):

@@ -28,6 +28,7 @@ Python 3.9+, pytest, Appium-Python-Client, Page Object Model. Ported from the Ja
 - `test_pay_via_qr.py` also taps CONFIRM (four payments per run): dynamic QRs pay Php 10, static QRs pay the amount encoded in the QR (e.g. Php 88.88).
 - `test_send_money_via_bayad_wallet.py` repeats the six Send Money payments, entering from the Wallet tab (six more per run).
 - `tests/Android/Basic Account/test_basic_account_registration.py` registers a real staging account per run: set `REG_MOBILE` (a new number each run) and `REG_PASSWORD`, never stored; the test skips without them. OTP is `111111` unless `REG_OTP` is set.
+- `tests/Android/Basic Account/test_basic_account_upgrade.py` upgrades that same new account (same `REG_MOBILE`/`REG_PASSWORD`, run it right after registration): it submits the Upgrade Account wizard once per number (the app keeps its progress), taking the ID photos, selfie and video with the emulator camera.
 - `test_pay_bills.py` pays Manila Water for real on staging: Php 30 plus a Php 10 fee per run. The billers and the receipt load slowly (up to ~60s), and the search button and result row are tapped by position.
 - `test_login.py` sends wrong passwords and can lock the test accounts ("blocked temporarily").
 - The Appium server runs without `adb_shell`, so avoid `mobile: shell`.
