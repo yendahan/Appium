@@ -121,6 +121,23 @@ class MobileActions:
         LOG.info("Press Enter")
         self.driver.press_keycode(66)  # KEYCODE_ENTER
 
+    def touch_fingerprint(self, finger_id: int = 1) -> None:
+        """Sends a fingerprint touch to the emulator's sensor (finger_id is the enrolled finger); a physical phone cannot do this."""
+        LOG.info("Touch fingerprint sensor (finger %s)", finger_id)
+        try:
+            self.driver.finger_print(finger_id)
+        except WebDriverException as e:
+            raise FrameworkException(f"Fingerprint touch failed (only an emulator with an enrolled fingerprint supports it): {e}") from e
+
+    def restart_app(self, package: str) -> None:
+        """Closes and reopens the app inside the same session (its saved settings, such as biometric login, are kept)."""
+        LOG.info("Restart app %s", package)
+        self.driver.terminate_app(package)
+        self.driver.activate_app(package)
+
+    def is_emulator(self) -> bool:
+        return str(self.driver.capabilities.get("deviceUDID", "")).startswith("emulator-")
+
     def press_digits(self, digits: str) -> None:
         """Sends digits as hardware key presses to the focused widget (value not logged: may be a code)."""
         if not digits.isdigit():

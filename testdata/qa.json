@@ -39,9 +39,9 @@
       "basic": "9219299452"
     },
     "otherBank": {
-      "accountNumber": "111171201825",
-      "accountName": "Test Recipient",
-      "bankName": "Philippine National Bank"
+      "accountNumber": "09176296115",
+      "accountName": "Yen Automation",
+      "bankName": "StarPay"
     },
     "qr": {
       "p2pStatic": "testdata/qr/qrp2p-static.png",

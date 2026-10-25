@@ -121,7 +121,7 @@ pytest -m device --env qa --device emulator "tests/Android/Upgraded Consumer Acc
 
 ### Reusing the app (`--reuse-app`)
 
-By default every test gets a fresh Appium session with the app reset and logs in again (20s or more). With `--reuse-app` (or env `REUSE_APP=true`), tests marked `@pytest.mark.shared_session("<credentials node>")` keep one logged-in session per account: before each one the app is brought back to Home (`HomePage.return_to_home`) and `log_in_to_home` skips the login. These are the browse-only tests: wallet transactions (Upgraded and Asenso), Asenso my transactions and account management, Basic transactions and the Basic add-money previews. Launch, login, registration and every payment test keep a fresh app. A failed test, a switch to another account, or a session that cannot get back to Home closes the shared session so the next test starts clean. The code is `framework/shared_session.py` and the `driver` fixture in `conftest.py`.
+By default every test gets a fresh Appium session with the app reset and logs in again (20s or more). With `--reuse-app` (or env `REUSE_APP=true`), tests marked `@pytest.mark.shared_session("<credentials node>")` keep one logged-in session per account: before each one the app is brought back to Home (`HomePage.return_to_home`) and `log_in_to_home` skips the login. These are the browse-only tests (wallet transactions for Upgraded and Asenso, Asenso my transactions and account management, Basic transactions and the Basic add-money previews) and the Send Money tests (`test_send_money.py`, `test_send_money_via_bayad_wallet.py` and their Asenso copies): after a payment `return_to_home` taps DONE on the receipt (successful, unsuccessful or in progress) and then the Home tab. Launch, login, registration and the other payment tests (pay bills, pay via QR, add/withdraw money) keep a fresh app. A failed test, a switch to another account, or a session that cannot get back to Home closes the shared session so the next test starts clean. The code is `framework/shared_session.py` and the `driver` fixture in `conftest.py`.
 
 ```bash
 pytest -m device --env qa --device physical --reuse-app "tests/Android/Asenso Account"
@@ -149,6 +149,18 @@ pytest -m "device and not risky" --env qa --device emulator "tests/Android/Basic
 ```
 
 Zephyr cases are named `Basic Account: ...` in the `Android/Basic Account` folder.
+
+### Biometric login test (emulator only)
+
+`tests/Android/Basic Account/test_basic_account_login.py` enables biometrics on the Biometric Setup screen, closes and reopens the app, and logs in with the fingerprint. Appium can only send a fingerprint touch to an emulator, so on a physical phone the test skips. Prepare the emulator once:
+
+```bash
+adb -s emulator-5554 shell locksettings set-pin 1234     # a screen lock is required before a fingerprint can be enrolled
+adb -s emulator-5554 shell am start -a android.settings.FINGERPRINT_ENROLL   # confirm the PIN, tap I AGREE, then touch the sensor ~12 times:
+adb emu finger touch 1
+```
+
+Then run it (needs `BASIC_USERNAME` / `BASIC_PASSWORD`): `pytest -m device --env qa --device emulator "tests/Android/Basic Account/test_basic_account_login.py"`. It only enables biometrics inside its own fresh app session, so other tests still see the Biometric Setup screen as before. With a physical phone also attached, set `DEVICE_UDID=emulator-5554`.
 
 ### Registration tests
 

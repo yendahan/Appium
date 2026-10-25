@@ -9,7 +9,7 @@ from framework.test_data_loader import TestDataLoader
 from pages.send_money_page import SendMoneyPage
 from tests.Android.helpers import log_in_to_home
 
-pytestmark = [pytest.mark.device, pytest.mark.risky]
+pytestmark = [pytest.mark.device, pytest.mark.risky, pytest.mark.shared_session("credentials")]
 
 REVIEW_TIMEOUT = 60
 COMPLETE_TIMEOUT = 90  # InstaPay transfers take 45s+

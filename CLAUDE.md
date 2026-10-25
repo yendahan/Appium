@@ -6,7 +6,7 @@ Python 3.9+, pytest, Appium-Python-Client, Page Object Model. Ported from the Ja
 - `pytest` runs only the device-free `unit` tests (default, `-m unit` in pytest.ini).
 - `pytest -m device --env qa --device emulator` runs device tests; needs Appium on :4723 and an emulator.
 - `pytest -m "device and not risky"` runs only the safe device tests (app launch).
-- Add `--reuse-app` to let the browse-only tests marked `shared_session` (wallet/Asenso/Basic transactions, account management, Basic add-money previews) share one logged-in app session per account; everything else keeps a fresh app per test. A failed test or an account switch closes the shared session.
+- Add `--reuse-app` to let the tests marked `shared_session` (browse-only: wallet/Asenso/Basic transactions, account management, Basic add-money previews; plus the Send Money tests, which leave the receipt through DONE) share one logged-in app session per account; everything else keeps a fresh app per test. A failed test or an account switch closes the shared session.
 - Add `-k test_name` or a file path for a single test. `--cfg key=value` overrides any config key.
 - Credentials come only from env vars `TEST_USERNAME` and `TEST_PASSWORD`. The Asenso tests use `ASENSO_USERNAME` and `ASENSO_PASSWORD` (testdata node `asensoCredentials`). Never write them to a file.
 - Zephyr reporting is optional: with `ZEPHYR_TOKEN` set you must also set `ZEPHYR_CYCLE_NAME` and `ZEPHYR_CASES_FOLDER` (else the run stops). A run creates a new cycle, creates the folder if missing and the cases it lacks (`framework/zephyr_cases.py`); tests report to cases by name.
@@ -31,5 +31,6 @@ Python 3.9+, pytest, Appium-Python-Client, Page Object Model. Ported from the Ja
 - `tests/Android/Basic Account/test_basic_account_upgrade.py` upgrades that same new account (same `REG_MOBILE`/`REG_PASSWORD`, run it right after registration): it submits the Upgrade Account wizard once per number (the app keeps its progress), taking the ID photos, selfie and video with the emulator camera.
 - `test_pay_bills.py` pays Manila Water for real on staging: Php 30 plus a Php 10 fee per run. The billers and the receipt load slowly (up to ~60s), and the search button and result row are tapped by position.
 - `test_login.py` sends wrong passwords and can lock the test accounts ("blocked temporarily").
+- `tests/Android/Basic Account/test_basic_account_login.py` (biometric login) needs an emulator with a screen lock and an enrolled fingerprint (`adb shell locksettings set-pin 1234`, then Settings > Security > Fingerprint, touch with `adb emu finger touch 1`); it skips on a physical phone. It enables biometrics on the Basic account's fresh app session only, so other tests are unaffected.
 - The Appium server runs without `adb_shell`, so avoid `mobile: shell`.
 - Intermittent emulator network loss or app crashes cause one-off failures; rerun before changing code.

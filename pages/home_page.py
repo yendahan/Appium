@@ -9,6 +9,7 @@ from pages.base_page import BasePage
 SERVICES = (AppiumBy.ACCESSIBILITY_ID, "Services")
 HOME_TAB = (AppiumBy.ANDROID_UIAUTOMATOR, 'new UiSelector().descriptionStartsWith("Home")')  # bottom tab, desc "Home\nTab 1 of 4"
 YES_GO_BACK = (AppiumBy.ACCESSIBILITY_ID, "YES, GO BACK")  # the "Go back?" dialog some forms ask first
+DONE = (AppiumBy.ACCESSIBILITY_ID, "DONE")  # top right of a payment receipt (successful, unsuccessful or in progress)
 
 BACK_PRESSES = 5
 HOME_TIMEOUT = 10
@@ -27,6 +28,8 @@ class HomePage(BasePage):
                 return self.is_displayed(HOME_TIMEOUT)
             if a.is_visible(YES_GO_BACK, 1):
                 a.tap(YES_GO_BACK)
+            elif a.is_visible(DONE, 1):
+                a.tap(DONE)  # Back from a receipt could leave the app
             else:
                 a.press_back()
         return False

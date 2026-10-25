@@ -250,6 +250,14 @@ CASES.update({
                  ("Enter nickname, account number 12358959 and amount 30, then tap NEXT",
                   "Payment Summary shows total Php 40.00 (Php 30 + Php 10 fee)"),
                  ("Tap CONFIRM", "The receipt shows 'Payment Successful!'")]),
+    "test_basic_account_login.py::test_login_with_biometrics_after_enabling_it": Case(
+        "Basic Account: Login: biometrics enabled at setup logs in with the fingerprint on the next launch",
+        "Positive: biometrics enabled on the Biometric Setup screen lets the next app launch log in with the fingerprint.",
+        [APP, ("Tap Log in and sign in as the Basic test user", "The Biometric Setup screen is offered"),
+         ("Tap GAME! and YES on the Enable Biometrics Authentication dialog", "The fingerprint prompt is displayed"),
+         ("Touch the enrolled fingerprint", "The home screen is displayed"),
+         ("Close and reopen the app", "The fingerprint prompt is displayed instead of the login form"),
+         ("Touch the enrolled fingerprint", "The home screen is displayed")]),
     "test_basic_account_transactions.py::test_transaction_history_and_ongoing_activities_screenshots": Case(
         "Basic Account: Transaction History and Ongoing Activities are shown and captured",
         "Positive: the Activity tab shows Transaction History and Ongoing Activities; a screenshot is saved of each.",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -33,12 +34,22 @@ BANK_SEARCH = (AppiumBy.CLASS_NAME, "android.widget.EditText")
 SUCCESS = (XPATH, "//*[contains(@content-desc,'Successfully Sent')]")
 IN_PROGRESS = (XPATH, "//*[contains(@content-desc,'Send Money in Progress')]")
 ANY_RECEIPT = (XPATH, "//*[contains(@content-desc,'Successfully Sent') or contains(@content-desc,'Send Money in Progress')]")
+# A bank row's description is "<name>\n<Bank|...>"; the heading and "Select bank or wallet" have no line break, so a row means the list has loaded.
+BANK_ROWS = (XPATH, "//*[contains(@content-desc,'\n')]")
+LOAD_ERROR_TRY_AGAIN = (A11Y, "TRY AGAIN")  # button of the "Oops! Endpoint request timed out" popup
+# The To Bayad Wallet screen first draws a placeholder (balance "Php 0.00", amount section), then redraws ~2s later with the real balance
+# and the recent numbers, dropping anything typed meanwhile. Loaded = the recent numbers, or a balance other than Php 0.00.
+WALLET_FORM_LOADED = (XPATH, "//*[@content-desc='Recently used mobile number' or "
+                             "(starts-with(@content-desc,'Send Money') and not(contains(@content-desc,'Php 0.00')))]")
 CONFIRM = (A11Y, "CONFIRM")
 NEXT = (A11Y, "NEXT")
 REVIEW = (XPATH, "//*[@content-desc='Send Money Confirmation' or @content-desc='Payment Confirmation']")
 
-SEARCH_ATTEMPTS = 2
-BANK_LIST_ATTEMPTS = 3
+WALLET_FORM_TIMEOUT = 30
+WALLET_ENTRY_ATTEMPTS = 3
+WALLET_AMOUNT_TIMEOUT = 5
+BANK_LIST_TIMEOUT = 60  # the banks load from the backend
+BANK_RESULT_TIMEOUT = 10
 
 
 class SendMoneyPage(BasePage):
@@ -65,21 +76,27 @@ class SendMoneyPage(BasePage):
         return self
 
     def to_bayad_wallet(self, number: str, amount: str) -> "SendMoneyPage":
-        self.actions.tap(TO_BAYAD_WALLET)
-        self.actions.type(SEND_TO, number)
-        self.actions.type(AMOUNT, amount)
-        self.actions.tap(AMOUNT_HEADING)
-        self.actions.tap(NEXT)
+        a = self.actions
+        a.tap(TO_BAYAD_WALLET)
+        a.wait_visible(WALLET_FORM_LOADED, WALLET_FORM_TIMEOUT)
+        for _ in range(WALLET_ENTRY_ATTEMPTS):
+            a.type(SEND_TO, number)
+            a.press_enter()  # Done on the number pad commits the number; the amount section is only stable after that
+            if not a.is_visible(AMOUNT, WALLET_AMOUNT_TIMEOUT):
+                continue
+            a.type(AMOUNT, amount)
+            a.tap(AMOUNT_HEADING)
+            # the form redraws a few times after the number is entered and drops what was typed meanwhile: check the amount stuck
+            if a.is_visible(AMOUNT_HEADING, 2) and a.is_enabled(NEXT):
+                break
+        a.tap(NEXT)
         return self
 
     def to_other_bank(self, account_number: str, account_name: str, bank_name: str,
                       amount: str) -> "SendMoneyPage":
         a = self.actions
         result = (UIA, f'new UiSelector().descriptionStartsWith("{bank_name}")')
-        opens = 0
-        while opens < BANK_LIST_ATTEMPTS and not self._search_bank(bank_name, result):
-            self._back_to_menu()
-            opens += 1
+        self._search_bank(bank_name, result)
         a.wait_visible(result).click()  # list rows are not flagged clickable, so skip the clickable wait
         a.type(ACCOUNT_NO, account_number)
         a.press_enter()  # Done on the number pad: the Account Name field only shows once the account number is submitted
@@ -107,19 +124,20 @@ class SendMoneyPage(BasePage):
         return self.actions.is_visible(IN_PROGRESS, 2)
 
     # --- helpers -----------------------------------------------------------------------
-    def _back_to_menu(self) -> None:
-        for _ in range(3):
-            if self.actions.is_visible(TO_OTHER_BANKS, 2):
-                break
-            self.driver.back()
+    def _wait_for_bank_list(self) -> None:
+        """Waits for the bank rows (the heading and search icon show before them); taps TRY AGAIN on the timeout popup."""
+        a = self.actions
+        deadline = time.monotonic() + BANK_LIST_TIMEOUT
+        while not a.is_visible(BANK_ROWS, 2):
+            if a.is_visible(LOAD_ERROR_TRY_AGAIN, 1):
+                a.tap(LOAD_ERROR_TRY_AGAIN)
+            if time.monotonic() > deadline:
+                a.wait_visible(BANK_ROWS, 1)  # raises with the usual "not visible" message
 
-    def _search_bank(self, bank_name: str, result) -> bool:
+    def _search_bank(self, bank_name: str, result) -> None:
         a = self.actions
         a.tap(TO_OTHER_BANKS)
-        a.wait_visible((UIA, 'new UiSelector().descriptionContains("Bank")'))
+        self._wait_for_bank_list()
         a.tap(SEARCH_ICON)
-        for _ in range(SEARCH_ATTEMPTS):
-            a.type(BANK_SEARCH, bank_name)
-            if a.is_visible(result, 4):
-                return True
-        return False
+        a.type(BANK_SEARCH, bank_name)
+        a.wait_visible(result, BANK_RESULT_TIMEOUT)
