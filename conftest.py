@@ -39,9 +39,10 @@ def pytest_configure(config: pytest.Config) -> None:
 
 
 def pytest_collection_modifyitems(items: list) -> None:
-    """Runs the transaction history / ongoing activity tests last, so earlier payments show up in their screenshots."""
-    last = [i for i in items if i.path.name.endswith("_transactions.py")]
-    items[:] = [i for i in items if i not in last] + last
+    """Runs the transaction history / ongoing activity tests last in their own test folder, so the payments made
+    earlier in that folder show up in their screenshots."""
+    folders = list(dict.fromkeys(i.path.parent for i in items))
+    items.sort(key=lambda i: (folders.index(i.path.parent), i.path.name.endswith("_transactions.py")))
 
 
 def pytest_collection_finish(session: pytest.Session) -> None:

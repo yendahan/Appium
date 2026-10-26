@@ -16,12 +16,20 @@ class SharedSession:
 
     def acquire(self, key: str) -> Any:
         """The open session when it is the same account and it got back to Home, else a fresh one."""
-        if self._driver is not None and self._key == key and self._return_to_home(self._driver):
+        if self._driver is not None and self._key == key and self._can_reuse():
             LOG.info("Reusing the open app session (%s)", key)
             return self._driver
         self.discard()
         self._driver, self._key = self._create(), key
         return self._driver
+
+    def _can_reuse(self) -> bool:
+        """True when the open session got back to Home; a session Appium already closed counts as not reusable."""
+        try:
+            return self._return_to_home(self._driver)
+        except Exception as e:  # noqa: BLE001
+            LOG.warning("The open app session is gone (%s), starting a fresh one", type(e).__name__)
+            return False
 
     def discard(self) -> None:
         """Closes the session (after a failure, an account change, or the end of the run)."""
