@@ -1,6 +1,7 @@
 """Reusable, explicitly-waiting UI actions. The only module that touches the driver; pages delegate here."""
 from __future__ import annotations
 
+import base64
 import logging
 import re
 from datetime import datetime
@@ -21,6 +22,7 @@ LOG = logging.getLogger(__name__)
 Locator = Tuple[str, str]
 
 # One folder per test run (process), e.g. Screenshots/2026-10-16_14-30-00/PASSED
+RECORDING_SECONDS = 180  # the longest screen recording Android allows
 RUN_FOLDER = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 
@@ -105,6 +107,16 @@ class MobileActions:
         field.click()  # focus first: Flutter/custom fields only register input once focused
         field.clear()
         field.send_keys(text)
+
+    def type_amount(self, locator: Locator, amount: str) -> None:
+        """Types an amount with decimals (e.g. 1999.99) as key presses: money fields drop the '.' of a pasted/set text,
+        and only take the decimals when the digits and the period arrive as keys. Use on a field that is still empty."""
+        if not re.fullmatch(r"\d+(\.\d+)?", amount):
+            raise ValueError("amount must look like 1999 or 1999.99")
+        LOG.info("Type amount into %s (%d chars)", locator, len(amount))
+        self.wait_clickable(locator).click()
+        for ch in amount:
+            self.driver.press_keycode(56 if ch == "." else 7 + int(ch))  # KEYCODE_PERIOD = 56, KEYCODE_0 = 7
 
     def tap_at(self, x_percent: float, y_percent: float) -> None:
         """Taps a screen point (fractions 0-1); for custom widgets that expose no usable element."""
@@ -220,14 +232,8 @@ class MobileActions:
         Path: <artifacts.dir>/Screenshots/<zephyr.cases.folder>/<folders of the test file under tests/>/<run>/
         [subfolder]/. The first two levels mirror the Zephyr folder tree and are left out when not set.
         """
-        directory = Path(self._cfg.require("artifacts.dir")) / "Screenshots"
-        for part in folder_parts(self._cfg.get("zephyr.cases.folder")) + folder_parts(_screenshot_subfolder):
-            directory = directory / part
-        directory = directory / RUN_FOLDER
-        if subfolder and subfolder.strip():
-            directory = directory / sanitize(subfolder)
-        stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")[:-3]
-        target = directory / f"{sanitize(name)}-{stamp}.png"
+        directory = self._artifact_directory(subfolder)
+        target = directory / f"{sanitize(name)}-{datetime.now().strftime('%Y%m%d-%H%M%S-%f')[:-3]}.png"
         try:
             directory.mkdir(parents=True, exist_ok=True)
             target.write_bytes(self.driver.get_screenshot_as_png())
@@ -236,10 +242,43 @@ class MobileActions:
         except (OSError, WebDriverException) as e:
             raise FrameworkException(f"Could not capture screenshot '{name}'") from e
 
+    def start_recording(self) -> None:
+        """Starts recording the screen (at most 3 minutes); a recording that cannot start is logged, never fails the test."""
+        try:
+            self.driver.start_recording_screen(timeLimit=RECORDING_SECONDS)
+            LOG.info("Screen recording started")
+        except WebDriverException as e:
+            LOG.warning("Screen recording could not start: %s", e.msg if hasattr(e, "msg") else e)
+
+    def stop_recording(self, name: str, subfolder: Optional[str] = None) -> Optional[Path]:
+        """Stops the recording and saves it as an MP4 next to the screenshots (same folders, `subfolder`); None when it cannot."""
+        try:
+            video = self.driver.stop_recording_screen()
+            if not video:
+                return None
+            directory = self._artifact_directory(subfolder)
+            target = directory / f"{sanitize(name)}-{datetime.now().strftime('%Y%m%d-%H%M%S-%f')[:-3]}.mp4"
+            directory.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(base64.b64decode(video))
+            LOG.info("Screen recording saved: %s", target)
+            return target
+        except (OSError, WebDriverException) as e:
+            LOG.warning("Screen recording could not be saved: %s", e)
+            return None
+
     def page_source(self) -> str:
         return self.driver.page_source
 
     # --- internals ---------------------------------------------------------------------
+    def _artifact_directory(self, subfolder: Optional[str]) -> Path:
+        directory = Path(self._cfg.require("artifacts.dir")) / "Screenshots"
+        for part in folder_parts(self._cfg.get("zephyr.cases.folder")) + folder_parts(_screenshot_subfolder):
+            directory = directory / part
+        directory = directory / RUN_FOLDER
+        if subfolder and subfolder.strip():
+            directory = directory / sanitize(subfolder)
+        return directory
+
     def _wait(self, timeout: float) -> WebDriverWait:
         if timeout is None or timeout <= 0:
             raise ValueError(f"timeout must be positive but was {timeout}")

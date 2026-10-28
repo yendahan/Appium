@@ -124,41 +124,54 @@ CASES: Dict[str, Case] = {
                   "Payment Summary shows total Php 40.00 (Php 30 + Php 10 fee)"),
                  ("Tap CONFIRM", "The receipt shows 'Payment Successful!'")]),
     # --- pay via QR ---------------------------------------------------------------------------------------------
-    "test_pay_via_qr.py::test_pay_via_qr_valid": Case(
+    "test_payments.py::test_pay_via_qr_valid": Case(
         "Pay via QR: valid QR code is accepted",
         f"Positive: Pay via QR accepts a valid QR code scanned from the gallery ({QR_TYPES}).",
         LOGIN + [("Open Pay via QR and upload the QR code from the gallery", "The review step is displayed"),
                  ("Tap CONFIRM", "The receipt shows the payment was completed")]),
     # --- send money (from Services) -----------------------------------------------------------------------------
-    "test_send_money.py::test_via_qr_valid": Case(
+    "test_payments.py::test_via_qr_valid": Case(
         "Send Money: Via QR accepts a valid QR code",
         f"Positive: Via QR accepts a valid QR code ({QR_TYPES}).",
         LOGIN + [("Tap Services > Send Money > Via QR, upload the QR code from the gallery, enter amount 10 if the "
                   "QR has none and tap NEXT", REVIEW), SENT]),
-    "test_send_money.py::test_to_bayad_wallet_valid": Case(
+    "test_payments.py::test_to_bayad_wallet_valid": Case(
         "Send Money: To Bayad Wallet accepts a valid registered number",
         "Positive: To Bayad Wallet accepts a valid registered number.",
         LOGIN + [("Tap Services > Send Money > To Bayad Wallet, enter a registered number and amount 10, tap NEXT",
                   REVIEW), SENT]),
-    "test_send_money.py::test_to_other_bank_valid": Case(
-        "Send Money: To Other Banks and E-Wallets accepts a valid PNB account",
-        "Positive: To Other Banks and E-Wallets accepts a valid Philippine National Bank account.",
-        LOGIN + [("Tap Services > Send Money > To Other Banks and E-Wallets, search and pick Philippine National Bank, "
+    "test_payments.py::test_to_other_bank_valid": Case(
+        "Send Money: To Other Banks and E-Wallets accepts a valid account",
+        "Positive: To Other Banks and E-Wallets accepts a valid account.",
+        LOGIN + [("Tap Services > Send Money > To Other Banks and E-Wallets, search and pick the account's bank or e-wallet from the test data, "
                   "enter account number, account name and amount 10, tap NEXT", REVIEW), SENT]),
+    "test_send_money_limit.py::test_to_bayad_wallet_over_limit": Case(
+        "Send Money: To Bayad Wallet over the wallet balance prompts to add money",
+        "Negative: sending Php 50,000 to a Bayad Wallet shows Insufficient Funds and PROCEED TO ADD MONEY opens Add Money.",
+        LOGIN + [("Tap Services > Send Money > To Bayad Wallet, enter a registered number and amount 50000, tap NEXT",
+                  REVIEW),
+                 ("Tap CONFIRM", "The Insufficient Funds popup offers PROCEED TO ADD MONEY"),
+                 ("Tap PROCEED TO ADD MONEY", "The Add Money screen is displayed")]),
+    "test_send_money_limit.py::test_to_other_bank_over_limit": Case(
+        "Send Money: To Other Banks over the wallet balance prompts to add money",
+        "Negative: sending Php 50,000 to another bank shows Insufficient Funds and PROCEED TO ADD MONEY opens Add Money.",
+        LOGIN + [("Tap Services > Send Money > To Other Banks and E-Wallets, pick a bank, enter account details and "
+                  "amount 50000, tap NEXT", "The Insufficient Funds popup offers PROCEED TO ADD MONEY"),
+                 ("Tap PROCEED TO ADD MONEY", "The Add Money screen is displayed")]),
     # --- send money (from the Wallet tab) -----------------------------------------------------------------------
-    "test_send_money_via_bayad_wallet.py::test_wallet_via_qr_valid": Case(
+    "test_payments.py::test_wallet_via_qr_valid": Case(
         "Send Money from Wallet: Via QR accepts a valid QR code",
         f"Positive: from the Wallet tab, Send Money Via QR accepts a valid QR code ({QR_TYPES}).",
         LOGIN + [("Open Send Money from the Wallet tab, choose Via QR and upload the QR code",
                   "The review step is displayed"), SENT]),
-    "test_send_money_via_bayad_wallet.py::test_wallet_to_bayad_wallet_valid": Case(
+    "test_payments.py::test_wallet_to_bayad_wallet_valid": Case(
         "Send Money from Wallet: To Bayad Wallet accepts a valid registered number",
         "Positive: from the Wallet tab, To Bayad Wallet accepts a valid registered number.",
         LOGIN + [("Open Send Money from the Wallet tab, choose To Bayad Wallet and enter a registered number and amount",
                   "The review step is displayed"), SENT]),
-    "test_send_money_via_bayad_wallet.py::test_wallet_to_other_bank_valid": Case(
-        "Send Money from Wallet: To Other Banks and E-Wallets accepts a valid PNB account",
-        "Positive: from the Wallet tab, To Other Banks and E-Wallets accepts a valid Philippine National Bank account.",
+    "test_payments.py::test_wallet_to_other_bank_valid": Case(
+        "Send Money from Wallet: To Other Banks and E-Wallets accepts a valid account",
+        "Positive: from the Wallet tab, To Other Banks and E-Wallets accepts a valid account.",
         LOGIN + [("Open Send Money from the Wallet tab, choose To Other Banks and E-Wallets and enter the account "
                   "details", "The review step is displayed"), SENT]),
 }
@@ -231,10 +244,11 @@ CASES.update({
 CASES.update({
     "test_basic_account_add_money.py::test_over_the_counter_accepts_the_minimum_amount": Case(
         "Basic Account: Add Money Over the Counter accepts Php 300",
-        "Positive: Add Money > Over the Counter > Bayad Center accepts the minimum amount (Php 300) and reaches "
-        "Payment Confirmation (CONFIRM is not tapped).",
+        "Positive: Add Money > Over the Counter > Bayad Center accepts the minimum amount (Php 300), reaches "
+        "Payment Confirmation and shows a success receipt after CONFIRM.",
         LOGIN + [("Tap Add Money, choose Over the Counter and Bayad Center", "The amount form is displayed"),
-                 ("Enter 300 and tap NEXT", "The Payment Confirmation screen is displayed")]),
+                 ("Enter 300 and tap NEXT", "The Payment Confirmation screen is displayed"),
+                 ("Tap CONFIRM", "The receipt shows a success message (any other screen fails the test)")]),
     "test_basic_account_add_money.py::test_over_the_counter_below_minimum_shows_an_error": Case(
         "Basic Account: Add Money Over the Counter below the minimum shows an error",
         "Negative: an amount under the Php 300 minimum shows the minimum cash-in error and cannot be submitted.",

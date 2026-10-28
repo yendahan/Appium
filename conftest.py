@@ -8,7 +8,7 @@ from typing import Dict, Optional
 
 import pytest
 
-from framework import driver_factory, mobile_actions, zephyr_cases, zephyr_reporter
+from framework import bug_drafts, driver_factory, mobile_actions, run_report, zephyr_cases, zephyr_reporter
 from framework.config_manager import ConfigManager
 from framework.mobile_actions import MobileActions
 from framework.shared_session import SharedSession
@@ -16,6 +16,7 @@ from pages.home_page import HomePage
 
 LOG = logging.getLogger("conftest")
 SCREENSHOT_KEY = "screenshot_path"
+RESULTS: list = []  # the device tests of this run, for the end-of-run report
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -38,9 +39,18 @@ def pytest_configure(config: pytest.Config) -> None:
     ConfigManager.configure(config.getoption("--env"), config.getoption("--device"), overrides)
 
 
-def pytest_collection_modifyitems(items: list) -> None:
-    """Runs the transaction history / ongoing activity tests last in their own test folder, so the payments made
-    earlier in that folder show up in their screenshots."""
+ISOLATED_FOLDERS = ("Accounts Registration", "OTP Sending Money")  # run only when named on the command line
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
+    """Keeps the isolated folders out of every run that does not name them, and runs the transaction history / ongoing
+    activity tests last in their own test folder, so the payments made earlier in that folder show up in their screenshots."""
+    for folder in ISOLATED_FOLDERS:
+        if not any(folder in str(arg) for arg in config.args):
+            isolated = [i for i in items if folder in i.path.parts]
+            if isolated:
+                config.hook.pytest_deselected(items=isolated)
+                items[:] = [i for i in items if i not in isolated]
     folders = list(dict.fromkeys(i.path.parent for i in items))
     items.sort(key=lambda i: (folders.index(i.path.parent), i.path.name.endswith("_transactions.py")))
 
@@ -107,6 +117,26 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo):
         if drv is not None and (report.when == "call" or report.failed):
             screenshot = _capture(item, drv, report.passed)  # a failed login in a fixture is a setup failure
         _publish_to_zephyr(item, report, call, screenshot)
+        _record_result(item, report, screenshot)
+
+
+def _record_result(item: pytest.Item, report: pytest.TestReport, screenshot: Optional[Path]) -> None:
+    """Keeps what the end-of-run report needs: the outcome, the scenario, the error line and the result screenshot of a device test."""
+    if item.get_closest_marker("device") is None:
+        return
+    case = zephyr_cases.case_for(item.nodeid)
+    function = getattr(item, "function", None)
+    RESULTS.append(run_report.TestResult(
+        nodeid=item.nodeid.replace("tests/Android/", "", 1),
+        folder=item.path.parent.name,
+        name=case.name if case else item.name,
+        outcome="passed" if report.passed else "failed" if report.failed else "skipped",
+        doc=(function.__doc__ or "").strip() if function else "",
+        error=run_report.error_line(report.longreprtext) if report.failed else "",
+        error_text=run_report.error_text(report.longreprtext) if report.failed else "",
+        screenshot=screenshot,
+        steps=case.steps if case else None,
+        objective=case.objective if case else ""))
 
 
 def _capture(item: pytest.Item, drv, passed: bool) -> Optional[Path]:
@@ -156,7 +186,24 @@ def _publish_to_zephyr(item: pytest.Item, report: pytest.TestReport, call: pytes
 
 
 def pytest_terminal_summary(terminalreporter) -> None:
-    """After the run: what was created in Zephyr and where the results went."""
+    """After the run: the HTML report, and what was created in Zephyr and where the results went."""
+    try:
+        report = run_report.build(RESULTS, Path(ConfigManager.get_instance().require("artifacts.dir")), mobile_actions.RUN_FOLDER)
+    except Exception as e:  # noqa: BLE001 - a report problem never fails the run
+        LOG.warning("Run report not written: %s", e)
+        report = None
+    if report:
+        terminalreporter.write_sep("-", "Run report")
+        terminalreporter.write_line(str(report))
+        try:
+            cfg = ConfigManager.get_instance()
+            bugs = bug_drafts.write(RESULTS, Path(cfg.require("artifacts.dir")), mobile_actions.RUN_FOLDER,
+                                    {"app": cfg.get("app.package"), "env": cfg.env, "device": cfg.device})
+        except Exception as e:  # noqa: BLE001 - a draft problem never fails the run
+            LOG.warning("Bug drafts not written: %s", e)
+            bugs = None
+        if bugs:
+            terminalreporter.write_line(f"Bug drafts for {sum(r.outcome == 'failed' for r in RESULTS)} failed tests: {bugs}")
     line = zephyr_reporter.summary()
     if line:
         terminalreporter.write_sep("-", "Zephyr")

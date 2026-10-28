@@ -2,3 +2,4 @@ Appium-Python-Client>=4.0,<6
 selenium>=4.20,<5
 pytest>=8.0
 requests>=2.31
+Pillow>=10

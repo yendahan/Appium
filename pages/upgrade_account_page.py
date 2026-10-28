@@ -39,6 +39,7 @@ PROFILE_STEP = (A11Y, "Profile Information")
 ADDRESS_STEP = (A11Y, "Address Information")
 IDENTITY_STEP = (A11Y, "Identity Verification")
 REVIEW_STEP = (A11Y, "Review Details")
+BACK_CAMERA = (A11Y, "Take back photo of your ID")
 
 # The camera screens expose no usable elements, so the shutter is tapped by position: 50% across / 91.5% down.
 SHUTTER_X, SHUTTER_Y = 0.5, 0.915
@@ -47,6 +48,11 @@ LOAD_TIMEOUT = 60  # each wizard step loads slowly
 CAMERA_TIMEOUT = 60
 SHOT_TIMEOUT = 15  # the preview shows within a few seconds of the shutter; a tap before the camera is ready is lost
 SHOT_TRIES = 4
+CAMERA_OPEN_TRIES = 20  # looks (about a second each) for a camera screen to replace the previous shot's preview
+PICK_TRIES = 3
+PICK_LIST_TIMEOUT = 10  # the dropdown list shows within a few seconds of a tap that registered
+NEXT_TRIES = 3
+NEXT_STEP_TIMEOUT = 10  # step 2 shows within a few seconds of a tap that registered
 VIDEO_TIMEOUT = 40  # the video stops by itself after ~5s
 
 
@@ -64,8 +70,13 @@ class UpgradeAccountPage(BasePage):
         return self.actions.is_visible(PROFILE_STEP, timeout)
 
     def continue_from_profile(self) -> "UpgradeAccountPage":
-        """Step 1 (Customer's Name) is prefilled from the registration."""
-        self.actions.tap(NEXT)
+        """Step 1 (Customer's Name) is prefilled from the registration. A tap right after the step loads can be lost,
+        so NEXT is tapped again until step 2 (Other Information) shows."""
+        a = self.actions
+        for _ in range(NEXT_TRIES):
+            a.tap(NEXT)
+            if a.is_visible(PLACE_OF_BIRTH, NEXT_STEP_TIMEOUT):
+                break
         return self
 
     def fill_other_information(self, place_of_birth: str, nationality: str, source_of_fund: str,
@@ -107,6 +118,7 @@ class UpgradeAccountPage(BasePage):
         a.tap(OK_GOT_IT)  # "Take a photo of your ID"
         self._shoot(ID_PREVIEW)  # front
         a.tap(TAKE_BACK_PHOTO)
+        self._wait_camera(BACK_CAMERA)  # the front preview lingers on screen, else it is taken for the back photo's preview
         self._shoot(ID_PREVIEW)  # back
         a.tap(SUBMIT_AND_CONTINUE)
         a.tap(OK_GOT_IT)  # "Take a selfie"
@@ -128,9 +140,22 @@ class UpgradeAccountPage(BasePage):
         return self.actions.is_visible(SUBMITTED, timeout)
 
     def _pick(self, dropdown, option: str) -> None:
-        """Opens a dropdown and taps `option` (its entries are exposed by their text)."""
-        self.actions.tap(dropdown)
-        self.actions.tap((A11Y, option))
+        """Opens a dropdown and taps `option` (its entries are exposed by their text). A tap on the dropdown can be lost
+        (or its list can still be loading), so the dropdown is tapped again until the option shows."""
+        a = self.actions
+        for _ in range(PICK_TRIES):
+            a.tap(dropdown)
+            if a.is_visible((A11Y, option), PICK_LIST_TIMEOUT):
+                break
+        a.tap((A11Y, option))
+
+    def _wait_camera(self, title) -> None:
+        """Waits for the camera screen with `title`: its title shows and the previous shot's preview is gone (the preview
+        flickers and lingers for a few seconds after the next step is tapped, so one look is not enough)."""
+        a = self.actions
+        for _ in range(CAMERA_OPEN_TRIES):
+            if a.is_visible(title, 1) and not a.is_visible(ID_PREVIEW, 1):
+                return
 
     def _shoot(self, preview, video: bool = False) -> None:
         """Taps the camera shutter until `preview` shows (a video is started once and left to stop by itself)."""

@@ -395,8 +395,8 @@ def test_a_parametrized_test_resolves_by_its_function(setup):
     client = FakeClient()
     zephyr_reporter.start_run(client, NOW)
     key = zephyr_reporter.resolve(
-        "tests/Android/Upgraded Consumer Account/test_send_money.py::test_via_qr_valid[QRP2P - Static]")
-    assert key == client.folders[f"Regression/{SUB}"][zephyr_cases.CASES["test_send_money.py::test_via_qr_valid"].name]
+        "tests/Android/Upgraded Consumer Account/test_payments.py::test_via_qr_valid[QRP2P - Static]")
+    assert key == client.folders[f"Regression/{SUB}"][zephyr_cases.CASES["test_payments.py::test_via_qr_valid"].name]
 
 
 def test_a_test_with_no_defined_case_has_nowhere_to_report(setup):

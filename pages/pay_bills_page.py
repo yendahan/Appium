@@ -23,6 +23,9 @@ NEXT = (A11Y, "NEXT")
 CONFIRM = (A11Y, "CONFIRM")
 # A merchant (Asenso) account gets the "Customer E-Receipt" dialog over the receipt instead of the plain success screen.
 RECEIPT = (XPATH, "//*[@content-desc='Payment Successful!' or @content-desc='Customer E-Receipt']")
+E_RECEIPT = (A11Y, "Customer E-Receipt")
+MAYBE_NEXT_TIME = (A11Y, "Maybe next time")  # closes the E-Receipt dialog and leaves the receipt
+SUCCESS = (XPATH, "//*[contains(@content-desc,'Success')]")  # the receipt itself, once the dialog is closed
 
 # The search icon (top right) and the first result row are not flagged clickable and expose no usable element,
 # so they are tapped by position: 94% across / 8.5% down, and 45% across / 16.5% down.
@@ -93,3 +96,14 @@ class PayBillsPage(BasePage):
 
     def is_receipt_displayed(self, timeout: Optional[float] = None) -> bool:
         return self.actions.is_visible(RECEIPT, timeout)
+
+    def is_e_receipt_displayed(self, timeout: Optional[float] = None) -> bool:
+        return self.actions.is_visible(E_RECEIPT, timeout)
+
+    def dismiss_e_receipt(self) -> "PayBillsPage":
+        """Taps "Maybe next time" on the Customer E-Receipt dialog (merchant accounts) so the receipt behind it is visible."""
+        self.actions.tap(MAYBE_NEXT_TIME)
+        return self
+
+    def is_payment_successful_displayed(self, timeout: Optional[float] = None) -> bool:
+        return self.actions.is_visible(SUCCESS, timeout)

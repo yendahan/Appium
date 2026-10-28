@@ -42,6 +42,9 @@ LOAD_ERROR_TRY_AGAIN = (A11Y, "TRY AGAIN")  # button of the "Oops! Endpoint requ
 WALLET_FORM_LOADED = (XPATH, "//*[@content-desc='Recently used mobile number' or "
                              "(starts-with(@content-desc,'Send Money') and not(contains(@content-desc,'Php 0.00')))]")
 CONFIRM = (A11Y, "CONFIRM")
+INSUFFICIENT_FUNDS = (A11Y, "Insufficient Funds")  # popup: "You don't have enough balance ... Would you like to add money?"
+PROCEED_TO_ADD_MONEY = (A11Y, "PROCEED TO ADD MONEY")
+ADD_MONEY_METHODS = (A11Y, "Select Add Money Method")
 NEXT = (A11Y, "NEXT")
 REVIEW = (XPATH, "//*[@content-desc='Send Money Confirmation' or @content-desc='Payment Confirmation']")
 
@@ -70,7 +73,7 @@ class SendMoneyPage(BasePage):
         upload_qr_from_gallery(a, self.driver, qr_image, VIA_QR)
         prefilled = a.text(BANK_AMOUNT)
         if prefilled.strip() == "" or prefilled == "Amount":
-            a.type(BANK_AMOUNT, amount)
+            self._enter_amount(BANK_AMOUNT, amount)
             a.tap(ACCOUNT_NAME)
         a.tap(NEXT)
         return self
@@ -84,7 +87,7 @@ class SendMoneyPage(BasePage):
             a.press_enter()  # Done on the number pad commits the number; the amount section is only stable after that
             if not a.is_visible(AMOUNT, WALLET_AMOUNT_TIMEOUT):
                 continue
-            a.type(AMOUNT, amount)
+            self._enter_amount(AMOUNT, amount)
             a.tap(AMOUNT_HEADING)
             # the form redraws a few times after the number is entered and drops what was typed meanwhile: check the amount stuck
             if a.is_visible(AMOUNT_HEADING, 2) and a.is_enabled(NEXT):
@@ -102,7 +105,7 @@ class SendMoneyPage(BasePage):
         a.press_enter()  # Done on the number pad: the Account Name field only shows once the account number is submitted
         a.type(ACCOUNT_NAME, account_name)
         a.press_enter()  # drop focus so the keyboard closes; the Recipient's Details heading is gone once the name shows
-        a.type(BANK_AMOUNT, amount)
+        self._enter_amount(BANK_AMOUNT, amount)
         a.press_enter()  # blur: the amount is only committed when it loses focus
         a.tap(NEXT)
         return self
@@ -110,6 +113,17 @@ class SendMoneyPage(BasePage):
     def confirm(self) -> "SendMoneyPage":
         self.actions.tap(CONFIRM)
         return self
+
+    def is_insufficient_funds_displayed(self, timeout: Optional[float] = None) -> bool:
+        """The popup shows right after NEXT for To Other Banks, and after CONFIRM for To Bayad Wallet."""
+        return self.actions.is_visible(INSUFFICIENT_FUNDS, timeout)
+
+    def proceed_to_add_money(self) -> "SendMoneyPage":
+        self.actions.tap(PROCEED_TO_ADD_MONEY)
+        return self
+
+    def is_add_money_displayed(self, timeout: Optional[float] = None) -> bool:
+        return self.actions.is_visible(ADD_MONEY_METHODS, timeout)
 
     def is_review_displayed(self, timeout: Optional[float] = None) -> bool:
         return self.actions.is_visible(REVIEW, timeout)
@@ -122,6 +136,13 @@ class SendMoneyPage(BasePage):
 
     def is_in_progress_displayed(self) -> bool:
         return self.actions.is_visible(IN_PROGRESS, 2)
+
+    def _enter_amount(self, field, amount: str) -> None:
+        """Whole amounts are typed as text; amounts with decimals as key presses (the field only takes the decimals that way)."""
+        if "." in amount:
+            self.actions.type_amount(field, amount)
+        else:
+            self.actions.type(field, amount)
 
     # --- helpers -----------------------------------------------------------------------
     def _wait_for_bank_list(self) -> None:

@@ -33,9 +33,9 @@ def test_case_names_are_unique_and_every_case_has_steps():
 
 
 def test_case_for_ignores_the_directory_and_the_parameters():
-    expected = CASES["test_send_money.py::test_via_qr_valid"]
-    assert case_for("tests/Android/Upgraded Consumer Account/test_send_money.py::test_via_qr_valid[QRP2P - Static]") is expected
-    assert case_for("test_send_money.py::test_via_qr_valid") is expected
+    expected = CASES["test_payments.py::test_via_qr_valid"]
+    assert case_for("tests/Android/Upgraded Consumer Account/test_payments.py::test_via_qr_valid[QRP2P - Static]") is expected
+    assert case_for("test_payments.py::test_via_qr_valid") is expected
     assert case_for("tests/Android/Upgraded Consumer Account/test_nope.py::test_x") is None
 
 

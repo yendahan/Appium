@@ -24,6 +24,18 @@
     "username": "${env:BASIC_USERNAME}",
     "password": "${env:BASIC_PASSWORD}"
   },
+  "otpAccount": {
+    "username": "${env:OTP_MOBILE}",
+    "password": "${env:OTP_PASSWORD}"
+  },
+  "otpSend": {
+    "belowBank": "1999.99",
+    "atBank": "2000",
+    "aboveBank": "2000.01",
+    "belowWallet": "19999.99",
+    "atWallet": "20000",
+    "aboveWallet": "20000.01"
+  },
   "invalidLogin": {
     "username": "9000000000",
     "password": "Wrong@Pass123"
@@ -33,10 +45,11 @@
   },
   "sendMoney": {
     "amount": "10",
+    "breachAmount": "50000",
     "bayadWalletNumber": {
       "upgraded": "9764912641",
-      "asenso": "9688528895",
-      "basic": "9219299452"
+      "asenso": "9103221102",
+      "basic": "9200201012"
     },
     "otherBank": {
       "accountNumber": "09176296115",
@@ -63,7 +76,7 @@
     "city": "Bangued",
     "street": "123 Test Street",
     "idType": "VOTER'S ID",
-    "idNumber": "PO-1000001"
+    "idNumber": "1000001"
   },
   "basicAccount": {
     "addMoney": {

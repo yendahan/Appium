@@ -14,6 +14,8 @@ AMOUNT = (AppiumBy.XPATH, "//android.widget.EditText[@hint='Enter Amount']")
 AMOUNT_HEADING = (A11Y, "Enter or Select Amount (Php)")  # tapping it drops focus, which commits the amount and enables NEXT
 NEXT = (A11Y, "NEXT")
 CONFIRMATION = (A11Y, "Payment Confirmation")
+CONFIRM = (A11Y, "CONFIRM")
+SUCCESS = (AppiumBy.XPATH, "//*[contains(@content-desc,'Success')]")  # the receipt after CONFIRM
 MINIMUM_ERROR = (A11Y, "The minimum cash-in amount is 300.")
 
 # The partner rows ("Bayad Center", "Pera Hub") are not tapped reliably by element: the first row is tapped by position.
@@ -48,6 +50,13 @@ class AddMoneyPage(BasePage):
 
     def next_is_enabled(self) -> bool:
         return self.actions.is_enabled(NEXT)
+
+    def confirm(self) -> "AddMoneyPage":
+        self.actions.tap(CONFIRM)
+        return self
+
+    def is_success_displayed(self, timeout: Optional[float] = None) -> bool:
+        return self.actions.is_visible(SUCCESS, timeout)
 
     def is_confirmation_displayed(self, timeout: Optional[float] = None) -> bool:
         return self.actions.is_visible(CONFIRMATION, timeout)
