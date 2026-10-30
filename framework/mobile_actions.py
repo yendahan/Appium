@@ -147,6 +147,29 @@ class MobileActions:
         self.driver.terminate_app(package)
         self.driver.activate_app(package)
 
+    def background_app(self, seconds: int) -> None:
+        """Sends the app to the background for `seconds`, then brings it back (like pressing Home and reopening it)."""
+        LOG.info("Background app for %ss", seconds)
+        self.driver.background_app(seconds)
+
+    def set_orientation(self, orientation: str) -> None:
+        """Rotates the screen: "PORTRAIT" or "LANDSCAPE"."""
+        LOG.info("Rotate to %s", orientation)
+        self.driver.orientation = orientation
+
+    def lock_device(self) -> None:
+        LOG.info("Lock device")
+        self.driver.lock()
+
+    def unlock_device(self) -> None:
+        LOG.info("Unlock device")
+        self.driver.unlock()
+
+    def set_network(self, enabled: bool) -> None:
+        """Turns Wi-Fi and mobile data on or off together (an airplane-mode-like network loss) without `mobile: shell`."""
+        LOG.info("Network %s", "on" if enabled else "off")
+        self.driver.execute_script("mobile: setConnectivity", {"wifi": enabled, "data": enabled})
+
     def is_emulator(self) -> bool:
         return str(self.driver.capabilities.get("deviceUDID", "")).startswith("emulator-")
 

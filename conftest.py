@@ -39,7 +39,7 @@ def pytest_configure(config: pytest.Config) -> None:
     ConfigManager.configure(config.getoption("--env"), config.getoption("--device"), overrides)
 
 
-ISOLATED_FOLDERS = ("Accounts Registration", "OTP Sending Money")  # run only when named on the command line
+ISOLATED_FOLDERS = ("Accounts Registration", "OTP Sending Money", "Send Money Interruptions")  # run only when named on the command line
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list) -> None:
